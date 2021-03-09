@@ -1,44 +1,90 @@
 """Console script for dashi."""
 import json
 from contextlib import closing
-from typing import Tuple
+from typing import Dict, Tuple
 
 import click
 
+from dashi import task
 from dashi.task import TaskQueue
 
 
 @click.group()
-def main():
+@click.option("--broker-url", help="Task queue broker URL", required=True)
+@click.option("--queue-name", help="Task queue name", required=True)
+@click.option(
+    "--connection-timeout",
+    type=int,
+    help="Connection timeout (s)",
+    default=task.DEFAULT_TIMEOUT,
+    show_default=True,
+)
+@click.pass_context
+def main(ctx: Dict, broker_url: str, queue_name: str, connection_timeout: int):
     """Simple CLI for task"""
-    pass
+
+    ctx.obj["BROKER_URL"] = broker_url
+    ctx.obj["QUEUE_NAME"] = queue_name
+    ctx.obj["CONNECTION_TIMEOUT"] = connection_timeout
 
 
 @main.command()
-@click.option("--broker-url", help="Task queue broker URL")
-@click.option("--queue-name", help="Task queue name")
 @click.option(
-    "--task-meta", type=(str, str), help="Task metadata key/value pear", multiple=True
+    "--task-meta",
+    type=(str, str),
+    help="Task metadata key/value pair",
+    multiple=True,
+    required=True,
 )
-def enqueue(broker_url: str, queue_name: str, task_meta: Tuple[Tuple[str, str]]):
+@click.pass_context
+def enqueue(ctx: Dict, task_meta: Tuple[Tuple[str, str]]):
     """Enqueue a task to the queue"""
 
     # Convert input key/value to task
     task = {k: v for (k, v) in task_meta}
-    with closing(TaskQueue(queue_name, broker_url)) as queue:
+    with closing(TaskQueue(ctx.obj)) as queue:
         queue.enqueue(task)
 
 
 @main.command()
-@click.option("--broker-url", help="Task queue broker URL")
-@click.option("--queue-name", help="Task queue name")
-def dequeue(broker_url: str, queue_name: str):
+@click.option(
+    "--blocking-dequeue",
+    type=bool,
+    help="Blocking dequeue operation",
+    default=task.DEFAULT_BLOCKING_DEQUEUE,
+    show_default=True,
+)
+@click.option(
+    "--blocking-dequeue-timeout",
+    type=int,
+    help="Dequeue block timeout",
+    default=task.DEFAULT_TIMEOUT,
+    show_default=True,
+)
+@click.option(
+    "--dequeue-raise-on-empty",
+    type=bool,
+    help="Raise error on empty queue",
+    default=task.DEFAULT_RAISE_ON_EMPTY_DEQUEUE,
+    show_default=True,
+)
+@click.pass_context
+def dequeue(
+    ctx: Dict,
+    blocking_dequeue: bool,
+    blocking_dequeue_timeout: int,
+    dequeue_raise_on_empty: bool,
+):
     """Dequeue task from the queue"""
 
-    with closing(TaskQueue(queue_name, broker_url)) as queue:
+    ctx.obj["BLOCKING_DEQUEUE"] = blocking_dequeue
+    ctx.obj["DEQUEUE_TIMEOUT"] = blocking_dequeue_timeout
+    ctx.obj["RAISE_ON_EMPTY_DEQUEUE"] = dequeue_raise_on_empty
+
+    with closing(TaskQueue(ctx.obj)) as queue:
         task = queue.dequeue()
     click.echo(json.dumps(task))
 
 
 if __name__ == "__main__":
-    main()
+    main(obj={})

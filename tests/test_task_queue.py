@@ -16,6 +16,10 @@ class TestTaskQueueUnit(unittest.TestCase):
         self.broker_url = "memory://"
         self.queue_name = "test-task-queue"
 
+        self.config = TaskQueue.get_default_config()
+        self.config["BROKER_URL"] = self.broker_url
+        self.config["QUEUE_NAME"] = self.queue_name
+
     @mock.patch("dashi.task.Connection", autospec=True)
     def test_task_queue_unit_init(self, mock_connection):
         """Test that TaskQueue attributes are set properly"""
@@ -23,10 +27,12 @@ class TestTaskQueueUnit(unittest.TestCase):
         mock_conn_obj = mock.Mock()
         mock_connection.return_value = mock_conn_obj
 
-        tq = TaskQueue(self.queue_name, self.broker_url)
+        tq = TaskQueue(self.config)
         self.assertEqual(tq.name, self.queue_name)
         self.assertEqual(tq.broker_url, self.broker_url)
-        mock_connection.assert_called_once_with(self.broker_url)
+        mock_connection.assert_called_once_with(
+            self.broker_url, connect_timeout=self.config["CONNECTION_TIMEOUT"]
+        )
         mock_conn_obj.SimpleQueue.assert_called_once_with(
             self.queue_name, serializer="json"
         )
@@ -38,7 +44,7 @@ class TestTaskQueueUnit(unittest.TestCase):
         mock_conn_obj = mock.Mock()
         mock_connection.return_value = mock_conn_obj
 
-        with closing(TaskQueue(self.queue_name, self.broker_url)) as tq:
+        with closing(TaskQueue(self.config)) as tq:
             tq.queue.close.assert_not_called()
             tq.conn.release.assert_not_called()
 
@@ -50,7 +56,7 @@ class TestTaskQueueUnit(unittest.TestCase):
         """Test that TaskQueue mock enqueues task"""
 
         task = {"key": "value"}
-        tq = TaskQueue(self.queue_name, self.broker_url)
+        tq = TaskQueue(self.config)
         tq.enqueue(task)
         tq.queue.put.assert_called_once_with(task)
 
@@ -61,10 +67,13 @@ class TestTaskQueueUnit(unittest.TestCase):
         task = {"key": "value"}
         msg = mock.Mock()
         msg.payload = task
-        tq = TaskQueue(self.queue_name, self.broker_url)
+        tq = TaskQueue(self.config)
         tq.queue.get.return_value = msg
         result = tq.dequeue()
-        tq.queue.get.assert_called_once_with()
+        tq.queue.get.assert_called_once_with(
+            block=self.config["BLOCKING_DEQUEUE"],
+            timeout=self.config["DEQUEUE_TIMEOUT"],
+        )
         self.assertDictEqual(result, task)
 
 
@@ -74,7 +83,10 @@ class TestTaskQueueIntegration(unittest.TestCase):
     def setUp(self):
         self.broker_url = "memory://"
         self.queue_name = "test-task-queue"
-        self.tq = TaskQueue(self.queue_name, self.broker_url)
+        self.config = TaskQueue.get_default_config()
+        self.config["BROKER_URL"] = self.broker_url
+        self.config["QUEUE_NAME"] = self.queue_name
+        self.tq = TaskQueue(self.config)
 
     def tearDown(self):
         self.tq.queue.queue.delete()
@@ -83,7 +95,7 @@ class TestTaskQueueIntegration(unittest.TestCase):
     def test_task_queue_integration_connection(self):
         """Test that TaskQueue connects properly"""
 
-        with closing(TaskQueue(self.queue_name, self.broker_url)) as tq:
+        with closing(TaskQueue(self.config)) as tq:
             self.assertTrue(tq.conn.connected)
 
         self.assertFalse(tq.conn.connected)

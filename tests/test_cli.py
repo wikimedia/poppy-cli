@@ -14,6 +14,9 @@ class TestCLIUnit(unittest.TestCase):
     def setUp(self):
         self.broker_url = "memory://"
         self.queue_name = "test-task-queue"
+        self.config = TaskQueue.get_default_config()
+        self.config["BROKER_URL"] = self.broker_url
+        self.config["QUEUE_NAME"] = self.queue_name
 
     def test_cli_main_help(self):
         """Test that main CLI group returns a help with the right args."""
@@ -47,18 +50,26 @@ class TestCLIUnit(unittest.TestCase):
             mock_task_queue.return_value = mock_task_obj
             runner = CliRunner()
             runner.invoke(
-                cli.enqueue,
+                cli.main,
                 [
                     "--broker-url",
                     self.broker_url,
                     "--queue-name",
                     self.queue_name,
+                    "enqueue",
                     "--task-meta",
                     "cli-input-key",
                     "cli-input-value",
                 ],
+                obj={},
             )
-            mock_task_queue.assert_called_once_with(self.queue_name, self.broker_url)
+            mock_task_queue.assert_called_once_with(
+                {
+                    "BROKER_URL": "memory://",
+                    "QUEUE_NAME": "test-task-queue",
+                    "CONNECTION_TIMEOUT": 5,
+                }
+            )
             mock_task_obj.enqueue.assert_called_once_with(
                 {"cli-input-key": "cli-input-value"}
             )
@@ -71,15 +82,17 @@ class TestCLIUnit(unittest.TestCase):
             mock_task_queue.return_value = mock_task_obj
             runner = CliRunner()
             runner.invoke(
-                cli.dequeue,
+                cli.main,
                 [
                     "--broker-url",
                     self.broker_url,
                     "--queue-name",
                     self.queue_name,
+                    "dequeue",
                 ],
+                obj={},
             )
-            mock_task_queue.assert_called_once_with(self.queue_name, self.broker_url)
+            mock_task_queue.assert_called_once_with(self.config)
             mock_task_obj.dequeue.assert_called_once_with()
 
 
@@ -89,7 +102,10 @@ class TestCLIIntegration(unittest.TestCase):
     def setUp(self):
         self.broker_url = "memory://"
         self.queue_name = "test-task-queue"
-        self.tq = TaskQueue(self.queue_name, self.broker_url)
+        self.config = TaskQueue.get_default_config()
+        self.config["BROKER_URL"] = self.broker_url
+        self.config["QUEUE_NAME"] = self.queue_name
+        self.tq = TaskQueue(self.config)
 
     def tearDown(self):
         self.tq.queue.queue.delete()
@@ -102,16 +118,18 @@ class TestCLIIntegration(unittest.TestCase):
 
         runner = CliRunner()
         result = runner.invoke(
-            cli.enqueue,
+            cli.main,
             [
                 "--broker-url",
                 self.broker_url,
                 "--queue-name",
                 self.queue_name,
+                "enqueue",
                 "--task-meta",
                 "cli-input-key",
                 "cli-input-value",
             ],
+            obj={},
         )
         self.assertTrue(result.exit_code == 0)
         self.assertEqual(self.tq.queue.qsize(), 1)
@@ -126,12 +144,13 @@ class TestCLIIntegration(unittest.TestCase):
 
         runner = CliRunner()
         result = runner.invoke(
-            cli.enqueue,
+            cli.main,
             [
                 "--broker-url",
                 self.broker_url,
                 "--queue-name",
                 self.queue_name,
+                "enqueue",
                 "--task-meta",
                 "cli-input-key1",
                 "cli-input-value1",
@@ -142,6 +161,7 @@ class TestCLIIntegration(unittest.TestCase):
                 "cli-input-key3",
                 "cli-input-value3",
             ],
+            obj={},
         )
         self.assertTrue(result.exit_code == 0)
         self.assertEqual(self.tq.queue.qsize(), 1)
@@ -166,8 +186,15 @@ class TestCLIIntegration(unittest.TestCase):
 
         runner = CliRunner()
         result = runner.invoke(
-            cli.dequeue,
-            ["--broker-url", self.broker_url, "--queue-name", self.queue_name],
+            cli.main,
+            [
+                "--broker-url",
+                self.broker_url,
+                "--queue-name",
+                self.queue_name,
+                "dequeue",
+            ],
+            obj={},
         )
         self.assertTrue(result.exit_code == 0)
         result = json.loads(result.output)
@@ -180,7 +207,14 @@ class TestCLIIntegration(unittest.TestCase):
 
         runner = CliRunner()
         result = runner.invoke(
-            cli.dequeue,
-            ["--broker-url", self.broker_url, "--queue-name", self.queue_name],
+            cli.main,
+            [
+                "--broker-url",
+                self.broker_url,
+                "--queue-name",
+                self.queue_name,
+                "dequeue",
+            ],
+            obj={},
         )
         self.assertTrue(result.exit_code == 0)
