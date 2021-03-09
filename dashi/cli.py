@@ -37,7 +37,6 @@ def dequeue(broker_url: str, queue_name: str):
 
     with closing(TaskQueue(queue_name, broker_url)) as queue:
         task = queue.dequeue()
-
     click.echo(json.dumps(task))
 
 

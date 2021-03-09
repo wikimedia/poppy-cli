@@ -172,3 +172,15 @@ class TestCLIIntegration(unittest.TestCase):
         self.assertTrue(result.exit_code == 0)
         result = json.loads(result.output)
         self.assertDictEqual(result, task)
+
+    def test_cli_integration_dequeues_empty(self):
+        """Test that CLI dequeues task from CLI"""
+
+        self.assertEqual(self.tq.queue.qsize(), 0)
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli.dequeue,
+            ["--broker-url", self.broker_url, "--queue-name", self.queue_name],
+        )
+        self.assertTrue(result.exit_code == 0)

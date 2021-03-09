@@ -1,8 +1,11 @@
 from typing import Dict
 
 from kombu.connection import Connection
+from kombu.simple import Empty
 
 DEFAULT_SERIALIZER = "json"
+DEFAULT_TIMEOUT = 5
+DEFAULT_BLOCKING = True
 
 
 class TaskQueue:
@@ -13,12 +16,20 @@ class TaskQueue:
     :param broker_url: Backend broker URL
     """
 
-    def __init__(self, queue_name: str, broker_url: str):
+    def __init__(
+        self,
+        queue_name: str,
+        broker_url: str,
+        serializer: str = DEFAULT_SERIALIZER,
+        timeout: int = DEFAULT_TIMEOUT,
+        blocking: bool = DEFAULT_BLOCKING,
+    ):
         self.name = queue_name
         self.broker_url = broker_url
-        self.serializer = DEFAULT_SERIALIZER
-        # TODO: Setup sane connection timeout defaults
-        self.conn = Connection(self.broker_url)
+        self.serializer = serializer
+        self.blocking = blocking
+        self.timeout = timeout
+        self.conn = Connection(self.broker_url, connect_timeout=timeout)
         self.queue = self.conn.SimpleQueue(self.name, serializer=self.serializer)
 
     def enqueue(self, task: Dict):
@@ -33,7 +44,10 @@ class TaskQueue:
 
         :returns: A dict with task related key/value information
         """
-        return self.queue.get().payload
+        try:
+            return self.queue.get(block=self.blocking, timeout=self.timeout).payload
+        except Empty:
+            return {}
 
     def close(self):
         """Close connections"""
