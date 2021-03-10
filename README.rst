@@ -8,14 +8,17 @@ poppy-cli
 
 Poppy is a simple message queue CLI tool
 
-* Free software: GNU General Public License v3
-
 Features
 --------
 
 * Simple CLI implementation to enqueue/dequeue messages
 * Supports a variety of broker backends
 * Designed to act as a glue for CLI utils chaining to enqueue/dequeue tasks without any development effort
+
+License
+-------
+
+GNU General Public License v3
 
 Credits
 -------
