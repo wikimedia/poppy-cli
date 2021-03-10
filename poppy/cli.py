@@ -20,7 +20,9 @@ from poppy.queue import TaskQueue
     show_default=True,
 )
 @click.pass_context
-def main(ctx: click.core.Context, broker_url: str, queue_name: str, connection_timeout: int):
+def main(
+    ctx: click.core.Context, broker_url: str, queue_name: str, connection_timeout: int
+):
     """Simple CLI for task"""
 
     ctx.ensure_object(dict)

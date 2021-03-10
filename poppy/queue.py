@@ -1,12 +1,13 @@
 import sys
+from queue import Empty
 
 from kombu.connection import Connection
-from queue import Empty
 
 if sys.version_info >= (3, 8):
     from typing import Dict, TypedDict
 else:
     from typing import Dict
+
     from typing_extensions import TypedDict
 
 DEFAULT_SERIALIZER = "json"
