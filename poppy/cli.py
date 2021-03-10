@@ -85,7 +85,3 @@ def dequeue(
     with closing(TaskQueue(ctx.obj)) as queue:
         task = queue.dequeue()
     click.echo(json.dumps(task))
-
-
-if __name__ == "__main__":
-    main(obj={})
