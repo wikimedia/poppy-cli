@@ -1,12 +1,13 @@
 import sys
+from queue import Empty
 
 from kombu.connection import Connection
-from kombu.simple import Empty
 
 if sys.version_info >= (3, 8):
     from typing import Dict, TypedDict
 else:
     from typing import Dict
+
     from typing_extensions import TypedDict
 
 DEFAULT_SERIALIZER = "json"
@@ -15,7 +16,7 @@ DEFAULT_BLOCKING_DEQUEUE = False
 DEFAULT_RAISE_ON_EMPTY_DEQUEUE = False
 
 
-class ConfigDict(TypedDict):
+class ConfigDict(TypedDict, total=False):
     BROKER_URL: str
     QUEUE_NAME: str
     CONNECTION_TIMEOUT: int
@@ -81,7 +82,7 @@ class TaskQueue:
         self.conn.release()
 
     @staticmethod
-    def get_default_config() -> ConfigDict(total=False):
+    def get_default_config() -> ConfigDict:
         """Get default TaskQueue config"""
         return {
             "CONNECTION_TIMEOUT": DEFAULT_TIMEOUT,

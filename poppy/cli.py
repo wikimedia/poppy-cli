@@ -1,7 +1,7 @@
 """Console script for poppy."""
 import json
 from contextlib import closing
-from typing import Dict, Tuple
+from typing import Tuple
 
 import click
 
@@ -20,7 +20,9 @@ from poppy.queue import TaskQueue
     show_default=True,
 )
 @click.pass_context
-def main(ctx: Dict, broker_url: str, queue_name: str, connection_timeout: int):
+def main(
+    ctx: click.core.Context, broker_url: str, queue_name: str, connection_timeout: int
+):
     """Simple CLI for task"""
 
     ctx.ensure_object(dict)
@@ -38,7 +40,7 @@ def main(ctx: Dict, broker_url: str, queue_name: str, connection_timeout: int):
     required=True,
 )
 @click.pass_context
-def enqueue(ctx: Dict, task_meta: Tuple[Tuple[str, str]]):
+def enqueue(ctx: click.core.Context, task_meta: Tuple[Tuple[str, str]]):
     """Enqueue a task to the queue"""
 
     # Convert input key/value to task
@@ -71,7 +73,7 @@ def enqueue(ctx: Dict, task_meta: Tuple[Tuple[str, str]]):
 )
 @click.pass_context
 def dequeue(
-    ctx: Dict,
+    ctx: click.core.Context,
     blocking_dequeue: bool,
     blocking_dequeue_timeout: int,
     dequeue_raise_on_empty: bool,
