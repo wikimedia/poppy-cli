@@ -1,26 +1,26 @@
 =====
-dashi
+poppy
 =====
 
 
-.. image:: https://img.shields.io/pypi/v/dashi.svg
-        :target: https://pypi.python.org/pypi/dashi
+.. image:: https://img.shields.io/pypi/v/poppy.svg
+        :target: https://pypi.python.org/pypi/poppy
 
-.. image:: https://img.shields.io/travis/johngian/dashi.svg
-        :target: https://travis-ci.com/johngian/dashi
+.. image:: https://img.shields.io/travis/johngian/poppy.svg
+        :target: https://travis-ci.com/johngian/poppy
 
-.. image:: https://readthedocs.org/projects/dashi/badge/?version=latest
-        :target: https://dashi.readthedocs.io/en/latest/?version=latest
+.. image:: https://readthedocs.org/projects/poppy/badge/?version=latest
+        :target: https://poppy.readthedocs.io/en/latest/?version=latest
         :alt: Documentation Status
 
 
 
 
-Dashi is a simple message queue CLI tool
+Poppy is a simple message queue CLI tool
 
 
 * Free software: GNU General Public License v3
-* Documentation: https://dashi.readthedocs.io.
+* Documentation: https://poppy.readthedocs.io.
 
 
 Features

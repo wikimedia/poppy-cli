@@ -4,12 +4,12 @@ from unittest import mock
 
 from click.testing import CliRunner
 
-from dashi import cli
-from dashi.task import TaskQueue
+from poppy import cli
+from poppy.queue import TaskQueue
 
 
 class TestCLIUnit(unittest.TestCase):
-    """Tests for dashi CLI"""
+    """Tests for poppy CLI"""
 
     def setUp(self):
         self.broker_url = "memory://"
@@ -45,7 +45,7 @@ class TestCLIUnit(unittest.TestCase):
     def test_cli_unit_enqueue(self):
         """Test that CLI enqueue method adds tasks properly"""
 
-        with mock.patch("dashi.cli.TaskQueue") as mock_task_queue:
+        with mock.patch("poppy.cli.TaskQueue") as mock_task_queue:
             mock_task_obj = mock.Mock()
             mock_task_queue.return_value = mock_task_obj
             runner = CliRunner()
@@ -77,7 +77,7 @@ class TestCLIUnit(unittest.TestCase):
     def test_cli_unit_dequeue(self):
         """Test that CLI dequeue method pops tasks properly"""
 
-        with mock.patch("dashi.cli.TaskQueue") as mock_task_queue:
+        with mock.patch("poppy.cli.TaskQueue") as mock_task_queue:
             mock_task_obj = mock.Mock()
             mock_task_queue.return_value = mock_task_obj
             runner = CliRunner()
@@ -97,7 +97,7 @@ class TestCLIUnit(unittest.TestCase):
 
 
 class TestCLIIntegration(unittest.TestCase):
-    """Integration tests for dashi CLI"""
+    """Integration tests for poppy CLI"""
 
     def setUp(self):
         self.broker_url = "memory://"

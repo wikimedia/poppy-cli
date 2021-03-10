@@ -1,4 +1,4 @@
-Welcome to dashi's documentation!
+Welcome to poppy's documentation!
 ======================================
 
 .. toctree::

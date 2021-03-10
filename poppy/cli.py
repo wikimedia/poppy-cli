@@ -1,12 +1,12 @@
-"""Console script for dashi."""
+"""Console script for poppy."""
 import json
 from contextlib import closing
 from typing import Dict, Tuple
 
 import click
 
-from dashi import task
-from dashi.task import TaskQueue
+from poppy import queue
+from poppy.queue import TaskQueue
 
 
 @click.group()
@@ -16,7 +16,7 @@ from dashi.task import TaskQueue
     "--connection-timeout",
     type=int,
     help="Connection timeout (s)",
-    default=task.DEFAULT_TIMEOUT,
+    default=queue.DEFAULT_TIMEOUT,
     show_default=True,
 )
 @click.pass_context
@@ -51,21 +51,21 @@ def enqueue(ctx: Dict, task_meta: Tuple[Tuple[str, str]]):
     "--blocking-dequeue",
     type=bool,
     help="Blocking dequeue operation",
-    default=task.DEFAULT_BLOCKING_DEQUEUE,
+    default=queue.DEFAULT_BLOCKING_DEQUEUE,
     show_default=True,
 )
 @click.option(
     "--blocking-dequeue-timeout",
     type=int,
     help="Dequeue block timeout",
-    default=task.DEFAULT_TIMEOUT,
+    default=queue.DEFAULT_TIMEOUT,
     show_default=True,
 )
 @click.option(
     "--dequeue-raise-on-empty",
     type=bool,
     help="Raise error on empty queue",
-    default=task.DEFAULT_RAISE_ON_EMPTY_DEQUEUE,
+    default=queue.DEFAULT_RAISE_ON_EMPTY_DEQUEUE,
     show_default=True,
 )
 @click.pass_context

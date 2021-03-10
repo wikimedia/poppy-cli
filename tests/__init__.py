@@ -1,1 +1,1 @@
-"""Unit test package for dashi."""
+"""Unit test package for poppy."""

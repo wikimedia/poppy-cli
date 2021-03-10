@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
-"""Tests for `dashi` package."""
+"""Tests for `poppy` package."""
 
 import unittest
 from contextlib import closing
 from unittest import mock
 
-from dashi.task import TaskQueue
+from poppy.queue import TaskQueue
 
 
 class TestTaskQueueUnit(unittest.TestCase):
-    """Unit tests for dashi TaskQueue"""
+    """Unit tests for poppy TaskQueue"""
 
     def setUp(self):
         self.broker_url = "memory://"
@@ -20,7 +20,7 @@ class TestTaskQueueUnit(unittest.TestCase):
         self.config["BROKER_URL"] = self.broker_url
         self.config["QUEUE_NAME"] = self.queue_name
 
-    @mock.patch("dashi.task.Connection", autospec=True)
+    @mock.patch("poppy.queue.Connection", autospec=True)
     def test_task_queue_unit_init(self, mock_connection):
         """Test that TaskQueue attributes are set properly"""
 
@@ -37,7 +37,7 @@ class TestTaskQueueUnit(unittest.TestCase):
             self.queue_name, serializer="json"
         )
 
-    @mock.patch("dashi.task.Connection", autospec=True)
+    @mock.patch("poppy.queue.Connection", autospec=True)
     def test_task_queue_unit_close(self, mock_connection):
         """Test that TaskQueue connections are closed properly"""
 
@@ -51,7 +51,7 @@ class TestTaskQueueUnit(unittest.TestCase):
         tq.queue.close.assert_called_once()
         tq.conn.release.assert_called_once()
 
-    @mock.patch("dashi.task.Connection", autospec=True)
+    @mock.patch("poppy.queue.Connection", autospec=True)
     def test_task_queue_unit_enqueue(self, mock_connection):
         """Test that TaskQueue mock enqueues task"""
 
@@ -60,7 +60,7 @@ class TestTaskQueueUnit(unittest.TestCase):
         tq.enqueue(task)
         tq.queue.put.assert_called_once_with(task)
 
-    @mock.patch("dashi.task.Connection", autospec=True)
+    @mock.patch("poppy.queue.Connection", autospec=True)
     def test_task_queue_unit_dequeue(self, mock_connection):
         """Test that TaskQueue mock dequeues task"""
 
@@ -78,7 +78,7 @@ class TestTaskQueueUnit(unittest.TestCase):
 
 
 class TestTaskQueueIntegration(unittest.TestCase):
-    """Integration test for dashi TaskQueue"""
+    """Integration test for poppy TaskQueue"""
 
     def setUp(self):
         self.broker_url = "memory://"

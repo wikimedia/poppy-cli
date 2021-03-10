@@ -2,6 +2,6 @@
 Usage
 =====
 
-To use dashi in a project::
+To use poppy in a project::
 
-    import dashi
+    import poppy
