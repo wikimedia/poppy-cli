@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """The setup script."""
-
+import sys
 from setuptools import find_packages, setup
 
 with open("README.rst") as readme_file:
@@ -11,6 +11,10 @@ with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
 requirements = ["Click>=7.0", "kombu"]
+
+# Typings compatibility handling with extensions
+if sys.version_info < (3, 8):
+    requirements.append("typing_extensions")
 
 setup_requirements = []
 

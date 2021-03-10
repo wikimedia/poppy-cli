@@ -1,7 +1,13 @@
-from typing import Dict, TypedDict
+import sys
 
 from kombu.connection import Connection
 from kombu.simple import Empty
+
+if sys.version_info >= (3, 8):
+    from typing import Dict, TypedDict
+else:
+    from typing import Dict
+    from typing_extensions import TypedDict
 
 DEFAULT_SERIALIZER = "json"
 DEFAULT_TIMEOUT = 5
