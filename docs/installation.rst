@@ -32,13 +32,13 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/johngian/poppy
+    $ git clone git://github.com/johngian/poppy-cli
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl -OJL https://github.com/johngian/poppy/tarball/master
+    $ curl -OJL https://github.com/johngian/poppy-cli/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/johngian/poppy
-.. _tarball: https://github.com/johngian/poppy/tarball/master
+.. _Github repo: https://github.com/johngian/poppy-cli
+.. _tarball: https://github.com/johngian/poppy-cli/tarball/master
