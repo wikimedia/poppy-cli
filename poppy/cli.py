@@ -23,6 +23,7 @@ from poppy.queue import TaskQueue
 def main(ctx: Dict, broker_url: str, queue_name: str, connection_timeout: int):
     """Simple CLI for task"""
 
+    ctx.ensure_object(dict)
     ctx.obj["BROKER_URL"] = broker_url
     ctx.obj["QUEUE_NAME"] = queue_name
     ctx.obj["CONNECTION_TIMEOUT"] = connection_timeout
