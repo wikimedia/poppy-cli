@@ -2,26 +2,13 @@
 poppy-cli
 ==========
 
-
-.. image:: https://img.shields.io/pypi/v/poppy-cli.svg
-        :target: https://pypi.python.org/pypi/poppy-cli
-
-.. image:: https://img.shields.io/travis/johngian/poppy-cli-cli.svg
-        :target: https://travis-ci.com/johngian/poppy-cli-cli
-
-.. image:: https://readthedocs.org/projects/poppy-cli/badge/?version=latest
-        :target: https://poppy-cli.readthedocs.io/en/latest/?version=latest
-        :alt: Documentation Status
-
-
+.. image:: https://github.com/johngian/poppy-cli/actions/workflows/tests.yml/badge.svg?branch=master
+        :target: https://github.com/johngian/poppy-cli/actions/workflows/tests.yml
 
 
 Poppy is a simple message queue CLI tool
 
-
 * Free software: GNU General Public License v3
-* Documentation: https://poppy-cli.readthedocs.io.
-
 
 Features
 --------
