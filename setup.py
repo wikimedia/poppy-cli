@@ -12,10 +12,6 @@ with open("HISTORY.rst") as history_file:
 
 requirements = ["Click>=7.0", "kombu"]
 
-# Typings compatibility handling with extensions
-if sys.version_info < (3, 8):
-    requirements.append("typing_extensions")
-
 setup_requirements = []
 
 test_requirements = []

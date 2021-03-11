@@ -9,3 +9,4 @@ Sphinx==1.8.5
 twine==1.14.0
 Click==7.0
 mypy==0.812
+typing_extensions==3.7.4.3
