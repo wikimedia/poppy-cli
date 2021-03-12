@@ -9,7 +9,7 @@ from unittest import mock
 from poppy.task import TaskQueue
 
 
-class TestTaskQueueUnit(unittest.TestCase):
+class TestTaskQueueKombuUnit(unittest.TestCase):
     """Unit tests for poppy TaskQueue"""
 
     def setUp(self):
@@ -77,7 +77,7 @@ class TestTaskQueueUnit(unittest.TestCase):
         self.assertDictEqual(result, task)
 
 
-class TestTaskQueueIntegration(unittest.TestCase):
+class TestTaskQueueKombuIntegration(unittest.TestCase):
     """Integration test for poppy TaskQueue"""
 
     def setUp(self):
