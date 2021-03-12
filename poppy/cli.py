@@ -5,8 +5,9 @@ from typing import Tuple
 
 import click
 
-from poppy import queue
-from poppy.queue import TaskQueue
+from poppy.task import TaskQueue
+
+DEFAULT_CONFIG = TaskQueue.get_default_config()
 
 
 @click.group()
@@ -16,7 +17,7 @@ from poppy.queue import TaskQueue
     "--connection-timeout",
     type=int,
     help="Connection timeout (s)",
-    default=queue.DEFAULT_TIMEOUT,
+    default=DEFAULT_CONFIG["CONNECTION_TIMEOUT"],
     show_default=True,
 )
 @click.pass_context
@@ -54,21 +55,21 @@ def enqueue(ctx: click.core.Context, task_meta: Tuple[Tuple[str, str]]):
     "--blocking-dequeue",
     type=bool,
     help="Blocking dequeue operation",
-    default=queue.DEFAULT_BLOCKING_DEQUEUE,
+    default=DEFAULT_CONFIG["BLOCKING_DEQUEUE"],
     show_default=True,
 )
 @click.option(
     "--blocking-dequeue-timeout",
     type=int,
     help="Dequeue block timeout",
-    default=queue.DEFAULT_TIMEOUT,
+    default=DEFAULT_CONFIG["DEQUEUE_TIMEOUT"],
     show_default=True,
 )
 @click.option(
     "--dequeue-raise-on-empty",
     type=bool,
     help="Raise error on empty queue",
-    default=queue.DEFAULT_RAISE_ON_EMPTY_DEQUEUE,
+    default=DEFAULT_CONFIG["RAISE_ON_EMPTY_DEQUEUE"],
     show_default=True,
 )
 @click.pass_context

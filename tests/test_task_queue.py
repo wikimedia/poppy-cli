@@ -6,7 +6,7 @@ import unittest
 from contextlib import closing
 from unittest import mock
 
-from poppy.queue import TaskQueue
+from poppy.task import TaskQueue
 
 
 class TestTaskQueueUnit(unittest.TestCase):
@@ -20,7 +20,7 @@ class TestTaskQueueUnit(unittest.TestCase):
         self.config["BROKER_URL"] = self.broker_url
         self.config["QUEUE_NAME"] = self.queue_name
 
-    @mock.patch("poppy.queue.Connection", autospec=True)
+    @mock.patch("poppy.engine.Connection", autospec=True)
     def test_task_queue_unit_init(self, mock_connection):
         """Test that TaskQueue attributes are set properly"""
 
@@ -28,8 +28,8 @@ class TestTaskQueueUnit(unittest.TestCase):
         mock_connection.return_value = mock_conn_obj
 
         tq = TaskQueue(self.config)
-        self.assertEqual(tq.name, self.queue_name)
-        self.assertEqual(tq.broker_url, self.broker_url)
+        self.assertEqual(tq.engine.name, self.queue_name)
+        self.assertEqual(tq.engine.broker_url, self.broker_url)
         mock_connection.assert_called_once_with(
             self.broker_url, connect_timeout=self.config["CONNECTION_TIMEOUT"]
         )
@@ -37,7 +37,7 @@ class TestTaskQueueUnit(unittest.TestCase):
             self.queue_name, serializer="json"
         )
 
-    @mock.patch("poppy.queue.Connection", autospec=True)
+    @mock.patch("poppy.engine.Connection", autospec=True)
     def test_task_queue_unit_close(self, mock_connection):
         """Test that TaskQueue connections are closed properly"""
 
@@ -45,22 +45,22 @@ class TestTaskQueueUnit(unittest.TestCase):
         mock_connection.return_value = mock_conn_obj
 
         with closing(TaskQueue(self.config)) as tq:
-            tq.queue.close.assert_not_called()
-            tq.conn.release.assert_not_called()
+            tq.engine.queue.close.assert_not_called()
+            tq.engine.conn.release.assert_not_called()
 
-        tq.queue.close.assert_called_once()
-        tq.conn.release.assert_called_once()
+        tq.engine.queue.close.assert_called_once()
+        tq.engine.conn.release.assert_called_once()
 
-    @mock.patch("poppy.queue.Connection", autospec=True)
+    @mock.patch("poppy.engine.Connection", autospec=True)
     def test_task_queue_unit_enqueue(self, mock_connection):
         """Test that TaskQueue mock enqueues task"""
 
         task = {"key": "value"}
         tq = TaskQueue(self.config)
         tq.enqueue(task)
-        tq.queue.put.assert_called_once_with(task)
+        tq.engine.queue.put.assert_called_once_with(task)
 
-    @mock.patch("poppy.queue.Connection", autospec=True)
+    @mock.patch("poppy.engine.Connection", autospec=True)
     def test_task_queue_unit_dequeue(self, mock_connection):
         """Test that TaskQueue mock dequeues task"""
 
@@ -68,9 +68,9 @@ class TestTaskQueueUnit(unittest.TestCase):
         msg = mock.Mock()
         msg.payload = task
         tq = TaskQueue(self.config)
-        tq.queue.get.return_value = msg
+        tq.engine.queue.get.return_value = msg
         result = tq.dequeue()
-        tq.queue.get.assert_called_once_with(
+        tq.engine.queue.get.assert_called_once_with(
             block=self.config["BLOCKING_DEQUEUE"],
             timeout=self.config["DEQUEUE_TIMEOUT"],
         )
@@ -89,31 +89,31 @@ class TestTaskQueueIntegration(unittest.TestCase):
         self.tq = TaskQueue(self.config)
 
     def tearDown(self):
-        self.tq.queue.queue.delete()
+        self.tq.engine.queue.queue.delete()
         self.tq.close()
 
     def test_task_queue_integration_connection(self):
         """Test that TaskQueue connects properly"""
 
         with closing(TaskQueue(self.config)) as tq:
-            self.assertTrue(tq.conn.connected)
+            self.assertTrue(tq.engine.conn.connected)
 
-        self.assertFalse(tq.conn.connected)
+        self.assertFalse(tq.engine.conn.connected)
 
     def test_task_queue_integration_enqueue_single_task(self):
         """Test that TaskQueue enqueues single task properly"""
 
-        self.assertEqual(self.tq.queue.qsize(), 0)
+        self.assertEqual(self.tq.engine.queue.qsize(), 0)
 
         task = {"key": "value"}
         self.tq.enqueue(task)
 
-        self.assertEqual(self.tq.queue.qsize(), 1)
+        self.assertEqual(self.tq.engine.queue.qsize(), 1)
 
     def test_task_queue_integration_enqueue_multiple_tasks(self):
         """Test that TaskQueue enqueues multiple tasks properly"""
 
-        self.assertEqual(self.tq.queue.qsize(), 0)
+        self.assertEqual(self.tq.engine.queue.qsize(), 0)
 
         tasks = [
             {"key1": "value1"},
@@ -124,25 +124,25 @@ class TestTaskQueueIntegration(unittest.TestCase):
         for task in tasks:
             self.tq.enqueue(task)
 
-        self.assertEqual(self.tq.queue.qsize(), 4)
+        self.assertEqual(self.tq.engine.queue.qsize(), 4)
 
     def test_task_queue_integration_dequeue_single_task(self):
         """Test that TaskQueue dequeues single task properly"""
 
-        self.assertEqual(self.tq.queue.qsize(), 0)
+        self.assertEqual(self.tq.engine.queue.qsize(), 0)
 
         task = {"key": "value"}
         self.tq.enqueue(task)
-        self.assertEqual(self.tq.queue.qsize(), 1)
+        self.assertEqual(self.tq.engine.queue.qsize(), 1)
 
         result = self.tq.dequeue()
         self.assertEqual(result, task)
-        self.assertEqual(self.tq.queue.qsize(), 0)
+        self.assertEqual(self.tq.engine.queue.qsize(), 0)
 
     def test_task_queue_integration_dequeue_multiple_tasks(self):
         """Test that TaskQueue dequeues multiple task properly"""
 
-        self.assertEqual(self.tq.queue.qsize(), 0)
+        self.assertEqual(self.tq.engine.queue.qsize(), 0)
 
         tasks = [
             {"key1": "value1"},
@@ -154,12 +154,12 @@ class TestTaskQueueIntegration(unittest.TestCase):
         for task in tasks:
             self.tq.enqueue(task)
 
-        self.assertEqual(self.tq.queue.qsize(), 4)
+        self.assertEqual(self.tq.engine.queue.qsize(), 4)
 
         result = self.tq.dequeue()
         self.assertEqual(result, tasks[0])
-        self.assertEqual(self.tq.queue.qsize(), 3)
+        self.assertEqual(self.tq.engine.queue.qsize(), 3)
 
         result = self.tq.dequeue()
         self.assertEqual(result, tasks[1])
-        self.assertEqual(self.tq.queue.qsize(), 2)
+        self.assertEqual(self.tq.engine.queue.qsize(), 2)

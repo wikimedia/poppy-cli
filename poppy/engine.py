@@ -1,4 +1,5 @@
 import sys
+
 from queue import Empty
 
 from kombu.connection import Connection
@@ -7,13 +8,7 @@ if sys.version_info >= (3, 8):
     from typing import Dict, TypedDict
 else:
     from typing import Dict
-
     from typing_extensions import TypedDict
-
-DEFAULT_SERIALIZER = "json"
-DEFAULT_TIMEOUT = 5
-DEFAULT_BLOCKING_DEQUEUE = False
-DEFAULT_RAISE_ON_EMPTY_DEQUEUE = False
 
 
 class ConfigDict(TypedDict, total=False):
@@ -25,33 +20,50 @@ class ConfigDict(TypedDict, total=False):
     RAISE_ON_EMPTY_DEQUEUE: bool
 
 
-class TaskQueue:
+class KombuEngine:
     """
-    Task queue implementation
+    Kombu backend for TaskQueue implementation
 
-    :param queue_name: Task queue name
-    :param broker_url: Backend broker URL
+    :param config: Kombu backend config
     """
 
     def __init__(self, config: ConfigDict):
-        self.serializer = DEFAULT_SERIALIZER
         self.config = config
         self.name = config["QUEUE_NAME"]
         self.broker_url = config["BROKER_URL"]
-        self.connection_timeout = config["CONNECTION_TIMEOUT"]
         self.conn = Connection(self.broker_url, connect_timeout=self.connection_timeout)
         self.queue = self.conn.SimpleQueue(self.name, serializer=self.serializer)
 
     @property
-    def is_blocking_dequeue(self):
-        return self.config["BLOCKING_DEQUEUE"]
+    def serializer(self):
+        return "json"
+
+    @staticmethod
+    def get_default_config():
+        return {
+            "CONNECTION_TIMEOUT": 5,
+            "BLOCKING_DEQUEUE": False,
+            "DEQUEUE_TIMEOUT": 5,
+            "RAISE_ON_EMPTY_DEQUEUE": False,
+        }
 
     @property
-    def blocking_dequeue_timeout(self):
-        return self.config["DEQUEUE_TIMEOUT"]
+    def connection_timeout(self) -> int:
+        key = "CONNECTION_TIMEOUT"
+        return self.config.get(key, self.get_default_config()[key])
 
     @property
-    def raise_on_empty_dequeue(self):
+    def is_blocking_dequeue(self) -> bool:
+        key = "BLOCKING_DEQUEUE"
+        return self.config.get(key, self.get_default_config()[key])
+
+    @property
+    def blocking_dequeue_timeout(self) -> int:
+        key = "DEQUEUE_TIMEOUT"
+        return self.config.get(key, self.get_default_config()[key])
+
+    @property
+    def raise_on_empty_dequeue(self) -> bool:
         return self.config["RAISE_ON_EMPTY_DEQUEUE"]
 
     def enqueue(self, task: Dict):
@@ -80,13 +92,3 @@ class TaskQueue:
         """Close connections"""
         self.queue.close()
         self.conn.release()
-
-    @staticmethod
-    def get_default_config() -> ConfigDict:
-        """Get default TaskQueue config"""
-        return {
-            "CONNECTION_TIMEOUT": DEFAULT_TIMEOUT,
-            "BLOCKING_DEQUEUE": DEFAULT_BLOCKING_DEQUEUE,
-            "DEQUEUE_TIMEOUT": DEFAULT_TIMEOUT,
-            "RAISE_ON_EMPTY_DEQUEUE": DEFAULT_RAISE_ON_EMPTY_DEQUEUE,
-        }

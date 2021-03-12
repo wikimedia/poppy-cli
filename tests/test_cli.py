@@ -5,7 +5,7 @@ from unittest import mock
 from click.testing import CliRunner
 
 from poppy import cli
-from poppy.queue import TaskQueue
+from poppy.task import TaskQueue
 
 
 class TestCLIUnit(unittest.TestCase):
@@ -96,7 +96,7 @@ class TestCLIUnit(unittest.TestCase):
             mock_task_obj.dequeue.assert_called_once_with()
 
 
-class TestCLIIntegration(unittest.TestCase):
+class TestCLIIntegrationKombu(unittest.TestCase):
     """Integration tests for poppy CLI"""
 
     def setUp(self):
@@ -108,13 +108,13 @@ class TestCLIIntegration(unittest.TestCase):
         self.tq = TaskQueue(self.config)
 
     def tearDown(self):
-        self.tq.queue.queue.delete()
+        self.tq.engine.queue.queue.delete()
         self.tq.close()
 
     def test_cli_integration_enqueues_task(self):
         """Test that CLI enqueues task from CLI options"""
 
-        self.assertEqual(self.tq.queue.qsize(), 0)
+        self.assertEqual(self.tq.engine.queue.qsize(), 0)
 
         runner = CliRunner()
         result = runner.invoke(
@@ -132,7 +132,7 @@ class TestCLIIntegration(unittest.TestCase):
             obj={},
         )
         self.assertTrue(result.exit_code == 0)
-        self.assertEqual(self.tq.queue.qsize(), 1)
+        self.assertEqual(self.tq.engine.queue.qsize(), 1)
 
         result = self.tq.dequeue()
         self.assertDictEqual(result, {"cli-input-key": "cli-input-value"})
@@ -140,7 +140,7 @@ class TestCLIIntegration(unittest.TestCase):
     def test_cli_integration_enqueues_task_multiple_keys(self):
         """Test that CLI enqueues task from CLI options"""
 
-        self.assertEqual(self.tq.queue.qsize(), 0)
+        self.assertEqual(self.tq.engine.queue.qsize(), 0)
 
         runner = CliRunner()
         result = runner.invoke(
@@ -164,7 +164,7 @@ class TestCLIIntegration(unittest.TestCase):
             obj={},
         )
         self.assertTrue(result.exit_code == 0)
-        self.assertEqual(self.tq.queue.qsize(), 1)
+        self.assertEqual(self.tq.engine.queue.qsize(), 1)
 
         result = self.tq.dequeue()
         self.assertDictEqual(
@@ -180,9 +180,9 @@ class TestCLIIntegration(unittest.TestCase):
         """Test that CLI dequeues task from CLI"""
 
         task = {"cli-input-key": "cli-input-value"}
-        self.assertEqual(self.tq.queue.qsize(), 0)
+        self.assertEqual(self.tq.engine.queue.qsize(), 0)
         self.tq.enqueue(task)
-        self.assertEqual(self.tq.queue.qsize(), 1)
+        self.assertEqual(self.tq.engine.queue.qsize(), 1)
 
         runner = CliRunner()
         result = runner.invoke(
@@ -203,7 +203,7 @@ class TestCLIIntegration(unittest.TestCase):
     def test_cli_integration_dequeues_empty(self):
         """Test that CLI dequeues task from CLI"""
 
-        self.assertEqual(self.tq.queue.qsize(), 0)
+        self.assertEqual(self.tq.engine.queue.qsize(), 0)
 
         runner = CliRunner()
         result = runner.invoke(
