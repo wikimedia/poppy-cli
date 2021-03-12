@@ -39,7 +39,7 @@ class KombuEngine:
         return "json"
 
     @staticmethod
-    def get_default_config():
+    def get_default_config() -> ConfigDict:
         return {
             "CONNECTION_TIMEOUT": 5,
             "BLOCKING_DEQUEUE": False,
@@ -49,22 +49,28 @@ class KombuEngine:
 
     @property
     def connection_timeout(self) -> int:
-        key = "CONNECTION_TIMEOUT"
-        return self.config.get(key, self.get_default_config()[key])
+        return self.config.get(
+            "CONNECTION_TIMEOUT", self.get_default_config()["CONNECTION_TIMEOUT"]
+        )
 
     @property
     def is_blocking_dequeue(self) -> bool:
-        key = "BLOCKING_DEQUEUE"
-        return self.config.get(key, self.get_default_config()[key])
+        return self.config.get(
+            "BLOCKING_DEQUEUE", self.get_default_config()["BLOCKING_DEQUEUE"]
+        )
 
     @property
     def blocking_dequeue_timeout(self) -> int:
-        key = "DEQUEUE_TIMEOUT"
-        return self.config.get(key, self.get_default_config()[key])
+        return self.config.get(
+            "DEQUEUE_TIMEOUT", self.get_default_config()["DEQUEUE_TIMEOUT"]
+        )
 
     @property
     def raise_on_empty_dequeue(self) -> bool:
-        return self.config["RAISE_ON_EMPTY_DEQUEUE"]
+        return self.config.get(
+            "RAISE_ON_EMPTY_DEQUEUE",
+            self.get_default_config()["RAISE_ON_EMPTY_DEQUEUE"],
+        )
 
     def enqueue(self, task: Dict):
         """Enqueue a task in the queue
