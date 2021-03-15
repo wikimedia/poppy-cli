@@ -3,9 +3,18 @@ import unittest
 from unittest import mock
 
 from click.testing import CliRunner
+from kafka.admin import KafkaAdminClient
 
 from poppy import cli
 from poppy.task import TaskQueue
+
+from .utils import (
+    bootstrap_kafka_tests,
+    check_kafka_connection,
+    delete_kafka_topic,
+    get_kafka_end_offset,
+    get_kafka_servers,
+)
 
 
 class TestCLIUnit(unittest.TestCase):
@@ -97,7 +106,7 @@ class TestCLIUnit(unittest.TestCase):
 
 
 class TestCLIIntegrationKombu(unittest.TestCase):
-    """Integration tests for poppy CLI"""
+    """Integration tests for poppy CLI backed by kombu"""
 
     def setUp(self):
         self.broker_url = "memory://"
@@ -135,7 +144,7 @@ class TestCLIIntegrationKombu(unittest.TestCase):
         self.assertEqual(self.tq.engine.queue.qsize(), 1)
 
         result = self.tq.dequeue()
-        self.assertDictEqual(result, {"cli-input-key": "cli-input-value"})
+        self.assertEqual(result, b'{"cli-input-key": "cli-input-value"}')
 
     def test_cli_integration_enqueues_task_multiple_keys(self):
         """Test that CLI enqueues task from CLI options"""
@@ -152,14 +161,14 @@ class TestCLIIntegrationKombu(unittest.TestCase):
                 self.queue_name,
                 "enqueue",
                 "--task-meta",
-                "cli-input-key1",
-                "cli-input-value1",
+                "k1",
+                "v1",
                 "--task-meta",
-                "cli-input-key2",
-                "cli-input-value2",
+                "k2",
+                "v2",
                 "--task-meta",
-                "cli-input-key3",
-                "cli-input-value3",
+                "k3",
+                "v3",
             ],
             obj={},
         )
@@ -167,13 +176,9 @@ class TestCLIIntegrationKombu(unittest.TestCase):
         self.assertEqual(self.tq.engine.queue.qsize(), 1)
 
         result = self.tq.dequeue()
-        self.assertDictEqual(
+        self.assertEqual(
             result,
-            {
-                "cli-input-key1": "cli-input-value1",
-                "cli-input-key2": "cli-input-value2",
-                "cli-input-key3": "cli-input-value3",
-            },
+            b'{"k1": "v1", "k2": "v2", "k3": "v3"}',
         )
 
     def test_cli_integration_dequeues_task(self):
@@ -204,6 +209,128 @@ class TestCLIIntegrationKombu(unittest.TestCase):
         """Test that CLI dequeues task from CLI"""
 
         self.assertEqual(self.tq.engine.queue.qsize(), 0)
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli.main,
+            [
+                "--broker-url",
+                self.broker_url,
+                "--queue-name",
+                self.queue_name,
+                "dequeue",
+            ],
+            obj={},
+        )
+        self.assertTrue(result.exit_code == 0)
+
+
+@unittest.skipIf(check_kafka_connection() is False, "Kafka connection unavailable")
+class TestCLIIntegrationKafka(unittest.TestCase):
+    """Integration tests for poppy CLI backed by kafka"""
+
+    def setUp(self):
+        self.queue_name = "test-poppy"
+        self.admin_client = KafkaAdminClient(
+            bootstrap_servers=get_kafka_servers(), client_id=self.__class__
+        )
+
+        bootstrap_kafka_tests(self.admin_client, self.queue_name)
+        self.broker_url = f"kafka://{get_kafka_servers()}"
+        self.config = TaskQueue.get_default_config()
+        self.config["BROKER_URL"] = self.broker_url
+        self.config["QUEUE_NAME"] = self.queue_name
+        self.config["DEQUEUE_TIMEOUT"] = 10
+
+    def tearDown(self):
+        delete_kafka_topic(self.admin_client, self.queue_name)
+
+    def test_cli_integration_enqueues_task(self):
+        """Test that CLI enqueues task from CLI options"""
+        tq = TaskQueue(self.config)
+        self.assertEqual(get_kafka_end_offset(tq, self.queue_name), 0)
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli.main,
+            [
+                "--broker-url",
+                self.broker_url,
+                "--queue-name",
+                self.queue_name,
+                "enqueue",
+                "--task-meta",
+                "cli-input-key",
+                "cli-input-value",
+            ],
+            obj={},
+        )
+        self.assertTrue(result.exit_code == 0)
+        self.assertEqual(get_kafka_end_offset(tq, self.queue_name), 1)
+
+        result = tq.dequeue()
+        self.assertEqual(result, b'{"cli-input-key": "cli-input-value"}')
+
+    def test_cli_integration_enqueues_task_multiple_keys(self):
+        """Test that CLI enqueues task from CLI options"""
+        tq = TaskQueue(self.config)
+        self.assertEqual(get_kafka_end_offset(tq, self.queue_name), 0)
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli.main,
+            [
+                "--broker-url",
+                self.broker_url,
+                "--queue-name",
+                self.queue_name,
+                "enqueue",
+                "--task-meta",
+                "k1",
+                "v1",
+                "--task-meta",
+                "k2",
+                "v2",
+                "--task-meta",
+                "k3",
+                "v3",
+            ],
+            obj={},
+        )
+        self.assertTrue(result.exit_code == 0)
+        self.assertEqual(get_kafka_end_offset(tq, self.queue_name), 1)
+
+        result = tq.dequeue()
+        self.assertEqual(result, b'{"k1": "v1", "k2": "v2", "k3": "v3"}')
+
+    def test_cli_integration_dequeues_task(self):
+        """Test that CLI dequeues task from CLI"""
+        tq = TaskQueue(self.config)
+        task = {"cli-input-key": "cli-input-value"}
+        self.assertEqual(get_kafka_end_offset(tq, self.queue_name), 0)
+        tq.enqueue(task)
+        tq.engine.producer.close()
+        self.assertEqual(get_kafka_end_offset(tq, self.queue_name), 1)
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli.main,
+            [
+                "--broker-url",
+                self.broker_url,
+                "--queue-name",
+                self.queue_name,
+                "dequeue",
+            ],
+            obj={},
+        )
+        self.assertTrue(result.exit_code == 0)
+        self.assertEqual({"cli-input-key": "cli-input-value"}, task)
+
+    def test_cli_integration_dequeues_empty(self):
+        """Test that CLI dequeues task from CLI"""
+        tq = TaskQueue(self.config)
+        self.assertEqual(get_kafka_end_offset(tq, self.queue_name), 0)
 
         runner = CliRunner()
         result = runner.invoke(

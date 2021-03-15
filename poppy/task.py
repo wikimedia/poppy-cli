@@ -1,6 +1,6 @@
-from typing import Dict
+from typing import Dict, Union
 
-from poppy.engine import ConfigDict, KombuEngine
+from poppy.engine import ConfigDict, KafkaEngine, KombuEngine
 
 
 class TaskQueue:
@@ -14,17 +14,17 @@ class TaskQueue:
         self.config = config
         self.engine = self._get_engine()
 
-    def _get_engine(self) -> KombuEngine:
+    def _get_engine(self) -> Union[KombuEngine, KafkaEngine]:
         """Get the backend engine based on broker URL"""
 
         if self.config["BROKER_URL"].startswith("kafka://"):
-            raise NotImplementedError()
+            return KafkaEngine(self.config)
         return KombuEngine(self.config)
 
     def enqueue(self, task: Dict):
         self.engine.enqueue(task)
 
-    def dequeue(self) -> Dict:
+    def dequeue(self) -> str:
         return self.engine.dequeue()
 
     def close(self):
@@ -32,4 +32,4 @@ class TaskQueue:
 
     @staticmethod
     def get_default_config():
-        return {**KombuEngine.get_default_config()}
+        return {**KombuEngine.get_default_config(), **KafkaEngine.get_default_config()}
