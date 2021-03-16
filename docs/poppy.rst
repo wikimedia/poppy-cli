@@ -12,10 +12,18 @@ poppy.cli module
     :undoc-members:
     :show-inheritance:
 
-poppy.queue module
-------------------
+poppy.engine module
+-------------------
 
-.. automodule:: poppy.queue
+.. automodule:: poppy.engine
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+poppy.task module
+-----------------
+
+.. automodule:: poppy.task
     :members:
     :undoc-members:
     :show-inheritance:
