@@ -26,7 +26,7 @@ class ConfigDict(TypedDict, total=False):
 
 class KombuEngine:
     """
-    Kombu backend for TaskQueue implementation
+    Kombu backend for Queue implementation
 
     :param config: Kombu backend config
     """
@@ -76,17 +76,17 @@ class KombuEngine:
             self.get_default_config()["RAISE_ON_EMPTY_DEQUEUE"],
         )
 
-    def enqueue(self, task: Dict):
-        """Enqueue a task in the queue
+    def enqueue(self, message: Dict):
+        """Enqueue a message in the queue
 
-        :param task: Dict with key/value information about the task
+        :param message: Dict with key/value information about the message
         """
-        self.queue.put(task)
+        self.queue.put(message)
 
     def dequeue(self) -> str:
-        """Dequeue a task from the queue
+        """Dequeue a message from the queue
 
-        :returns: A dict with task related key/value information
+        :returns: A dict with message related key/value information
         """
         try:
             msg = self.queue.get(
@@ -106,7 +106,7 @@ class KombuEngine:
 
 class KafkaEngine:
     """
-    Kafka backend for TaskQueue implementation
+    Kafka backend for Queue implementation
 
     :param config: Kombu backend config
     """
@@ -179,17 +179,17 @@ class KafkaEngine:
             self.get_default_config()["CONSUMER_AUTO_OFFSET_RESET"],
         )
 
-    def enqueue(self, task: Dict):
-        """Enqueue a task in the queue
+    def enqueue(self, message: Dict):
+        """Enqueue a message in the queue
 
-        :param task: Dict with key/value information about the task
+        :param message: Dict with key/value information about the message
         """
-        self.producer.send(self.topic, value=task)
+        self.producer.send(self.topic, value=message)
 
     def dequeue(self) -> str:
-        """Dequeue a task from the queue
+        """Dequeue a message from the queue
 
-        :returns: A dict with task related key/value information
+        :returns: A dict with message related key/value information
         """
         try:
             msg = next(self.consumer)

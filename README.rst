@@ -13,7 +13,7 @@ Features
 
 * Simple CLI implementation to enqueue/dequeue messages
 * Supports a variety of broker backends
-* Designed to act as a glue for CLI utils chaining to enqueue/dequeue tasks without any development effort
+* Designed to act as a glue for CLI utils chaining to enqueue/dequeue messages without any development effort
 
 Supported backends
 ------------------

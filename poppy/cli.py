@@ -4,14 +4,14 @@ from typing import Tuple
 
 import click
 
-from poppy.task import TaskQueue
+from poppy.messsaging import Queue
 
-DEFAULT_CONFIG = TaskQueue.get_default_config()
+DEFAULT_CONFIG = Queue.get_default_config()
 
 
 @click.group()
-@click.option("--broker-url", help="Task queue broker URL", required=True)
-@click.option("--queue-name", help="Task queue name", required=True)
+@click.option("--broker-url", help="Message queue broker URL", required=True)
+@click.option("--queue-name", help="Message queue name", required=True)
 @click.option(
     "--connection-timeout",
     type=int,
@@ -23,7 +23,7 @@ DEFAULT_CONFIG = TaskQueue.get_default_config()
 def main(
     ctx: click.core.Context, broker_url: str, queue_name: str, connection_timeout: int
 ):
-    """Simple CLI for task"""
+    """Simple CLI for messaging"""
 
     ctx.ensure_object(dict)
     ctx.obj["BROKER_URL"] = broker_url
@@ -33,20 +33,20 @@ def main(
 
 @main.command()
 @click.option(
-    "--task-meta",
+    "--message-meta",
     type=(str, str),
-    help="Task metadata key/value pair",
+    help="Message metadata key/value pair",
     multiple=True,
     required=True,
 )
 @click.pass_context
-def enqueue(ctx: click.core.Context, task_meta: Tuple[Tuple[str, str]]):
-    """Enqueue a task to the queue"""
+def enqueue(ctx: click.core.Context, message_meta: Tuple[Tuple[str, str]]):
+    """Enqueue a message to the queue"""
 
-    # Convert input key/value to task
-    task = {k: v for (k, v) in task_meta}
-    with closing(TaskQueue(ctx.obj)) as queue:
-        queue.enqueue(task)
+    # Convert input key/value to message
+    message = {k: v for (k, v) in message_meta}
+    with closing(Queue(ctx.obj)) as queue:
+        queue.enqueue(message)
 
 
 @main.command()
@@ -98,7 +98,7 @@ def dequeue(
     consumer_autocommit: bool,
     consumer_auto_offset_reset: str,
 ):
-    """Dequeue task from the queue"""
+    """Dequeue message from the queue"""
 
     ctx.obj["BLOCKING_DEQUEUE"] = blocking_dequeue
     ctx.obj["DEQUEUE_TIMEOUT"] = blocking_dequeue_timeout
@@ -109,6 +109,6 @@ def dequeue(
     if consumer_group_id:
         ctx.obj["CONSUMER_GROUP_ID"] = consumer_group_id
 
-    with closing(TaskQueue(ctx.obj)) as queue:
-        task = queue.dequeue()
-    click.echo(task)
+    with closing(Queue(ctx.obj)) as queue:
+        message = queue.dequeue()
+    click.echo(message)

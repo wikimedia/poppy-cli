@@ -9,17 +9,17 @@ Top level command
 
     Usage: poppy [OPTIONS] COMMAND [ARGS]...
 
-      Simple CLI for task
+      Simple CLI for messaging
 
     Options:
-      --broker-url TEXT             Task queue broker URL  [required]
-      --queue-name TEXT             Task queue name  [required]
+      --broker-url TEXT             Message queue broker URL  [required]
+      --queue-name TEXT             Message queue name  [required]
       --connection-timeout INTEGER  Connection timeout (s)  [default: 5]
       --help                        Show this message and exit.
 
     Commands:
-      dequeue  Dequeue task from the queue
-      enqueue  Enqueue a task to the queue
+      dequeue  Dequeue message from the queue
+      enqueue  Enqueue a message to the queue
 
 
 Enqueue command
@@ -29,11 +29,11 @@ Enqueue command
 
     Usage: poppy enqueue [OPTIONS]
 
-      Enqueue a task to the queue
+      Enqueue a message to the queue
 
     Options:
-      --task-meta <TEXT TEXT>...  Task metadata key/value pair  [required]
-      --help                      Show this message and exit.
+      --message-meta <TEXT TEXT>...  Message metadata key/value pair  [required]
+      --help                         Show this message and exit.
 
 
 Dequeue command
@@ -43,7 +43,7 @@ Dequeue command
 
     Usage: poppy dequeue [OPTIONS]
 
-      Dequeue task from the queue
+      Dequeue message from the queue
 
     Options:
       --blocking-dequeue BOOLEAN      Blocking dequeue operation  [default: False]
@@ -51,4 +51,9 @@ Dequeue command
                                       Dequeue block timeout  [default: 5]
       --dequeue-raise-on-empty BOOLEAN
                                       Raise error on empty queue  [default: False]
+      --consumer-group-id TEXT        Kafka consumer group ID
+      --consumer-autocommit BOOLEAN   Kafka consumer autocommit  [default: True]
+      --consumer-auto-offset-reset TEXT
+                                      Kafka consumer auto offset reset  [default:
+                                      earliest]
       --help                          Show this message and exit.

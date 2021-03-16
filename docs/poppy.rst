@@ -20,10 +20,10 @@ poppy.engine module
     :undoc-members:
     :show-inheritance:
 
-poppy.task module
------------------
+poppy.messsaging module
+-----------------------
 
-.. automodule:: poppy.task
+.. automodule:: poppy.messsaging
     :members:
     :undoc-members:
     :show-inheritance:
