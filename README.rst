@@ -15,6 +15,34 @@ Features
 * Supports a variety of broker backends
 * Designed to act as a glue for CLI utils chaining to enqueue/dequeue tasks without any development effort
 
+Supported backends
+------------------
+
+* Using `python-kafka`
+   * Kafka
+* Using `kombu`
+   * File based
+   * Database backend
+      * Engines supported by SQLAlchemy
+   * Redis
+   * MongoDB
+   * AMQP
+   * QPID
+   * Cloud services
+      * AWS
+         * SQS
+      * Azure
+         * Service Bus
+         * Storage Queues
+      * SoftLayer
+         * Message Queue
+   * Zookeeper
+   * Consul
+   * Etcd
+
+.. note::
+   List doesn't include kombu backends that are python specific or in memory because they are out of project scope
+
 License
 -------
 
