@@ -40,8 +40,7 @@ Supported backends
    * Consul
    * Etcd
 
-.. note::
-   List doesn't include kombu backends that are python specific or in memory because they are out of project scope
+List doesn't include kombu backends that are python specific or in memory because they are out of project scope.
 
 License
 -------
