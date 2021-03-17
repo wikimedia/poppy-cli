@@ -9,9 +9,13 @@ from kafka.admin import KafkaAdminClient
 from poppy import cli
 from poppy.messsaging import Queue
 
-from .utils import (bootstrap_kafka_tests, check_kafka_connection,
-                    delete_kafka_topic, get_kafka_end_offset,
-                    get_kafka_servers)
+from .utils import (
+    bootstrap_kafka_tests,
+    check_kafka_connection,
+    delete_kafka_topic,
+    get_kafka_end_offset,
+    get_kafka_servers,
+)
 
 CONFIG_TEST_IN_MEMORY_URL = "memory://"
 
