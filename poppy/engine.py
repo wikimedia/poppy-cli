@@ -91,9 +91,11 @@ class KombuEngine:
         :returns: A dict with message related key/value information
         """
         try:
-            return self.queue.get(
+            msg = self.queue.get(
                 block=self.is_blocking_dequeue, timeout=self.blocking_dequeue_timeout
-            ).body
+            )
+            msg.ack()
+            return msg.body
         except Empty as e:
             if self.raise_on_empty_dequeue:
                 raise e
