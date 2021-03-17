@@ -2,8 +2,11 @@ import os
 
 from kafka import TopicPartition
 from kafka.admin import KafkaAdminClient, NewTopic
-from kafka.errors import (NoBrokersAvailable, TopicAlreadyExistsError,
-                          UnknownTopicOrPartitionError)
+from kafka.errors import (
+    NoBrokersAvailable,
+    TopicAlreadyExistsError,
+    UnknownTopicOrPartitionError,
+)
 
 
 def get_kafka_servers():

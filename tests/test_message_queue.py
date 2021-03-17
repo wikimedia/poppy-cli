@@ -12,9 +12,14 @@ from kafka.admin import KafkaAdminClient
 from poppy.engine import KafkaEngine
 from poppy.messsaging import Queue
 
-from .utils import (bootstrap_kafka_tests, check_kafka_connection,
-                    delete_kafka_topic, get_kafka_committed_offset,
-                    get_kafka_end_offset, get_kafka_servers)
+from .utils import (
+    bootstrap_kafka_tests,
+    check_kafka_connection,
+    delete_kafka_topic,
+    get_kafka_committed_offset,
+    get_kafka_end_offset,
+    get_kafka_servers,
+)
 
 
 class TestQueueKombuUnit(unittest.TestCase):
