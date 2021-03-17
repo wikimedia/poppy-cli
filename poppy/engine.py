@@ -25,14 +25,14 @@ class ConfigDict(TypedDict, total=False):
     CONSUMER_AUTO_OFFSET_RESET: str
 
 
-DEFAULT_CONFIG: ConfigDict = {
-    "CONNECTION_TIMEOUT": 5,
-    "BLOCKING_DEQUEUE": False,
-    "DEQUEUE_TIMEOUT": 5,
-    "RAISE_ON_EMPTY_DEQUEUE": False,
-    "CONSUMER_AUTOCOMMIT": True,
-    "CONSUMER_AUTO_OFFSET_RESET": "earliest",
-}
+DEFAULT_CONFIG = ConfigDict(
+    CONNECTION_TIMEOUT=5,
+    BLOCKING_DEQUEUE=False,
+    DEQUEUE_TIMEOUT=5,
+    RAISE_ON_EMPTY_DEQUEUE=False,
+    CONSUMER_AUTOCOMMIT=True,
+    CONSUMER_AUTO_OFFSET_RESET="earliest",
+)
 
 
 class KombuEngine:
