@@ -14,6 +14,7 @@ Features
 * Simple CLI implementation to enqueue/dequeue messages
 * Supports a variety of broker backends
 * Designed to act as a glue for CLI utils chaining to enqueue/dequeue messages without any development effort
+* Extensive unit/integration testing and static type checking using mypy
 
 Supported backends
 ------------------
