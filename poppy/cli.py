@@ -1,12 +1,13 @@
 """Console script for poppy."""
 from contextlib import closing
-from typing import Tuple
+from typing import Dict, Tuple
 
 import click
 
+from poppy.engine import ConfigDict
 from poppy.messsaging import Queue
 
-DEFAULT_CONFIG = Queue.get_default_config()
+DEFAULT_CONFIG: ConfigDict = Queue.get_default_config()
 
 
 @click.group()
@@ -44,7 +45,7 @@ def enqueue(ctx: click.core.Context, message_meta: Tuple[Tuple[str, str]]):
     """Enqueue a message to the queue"""
 
     # Convert input key/value to message
-    message = {k: v for (k, v) in message_meta}
+    message: Dict[str, str] = {k: v for (k, v) in message_meta}
     with closing(Queue(ctx.obj)) as queue:
         queue.enqueue(message)
 
