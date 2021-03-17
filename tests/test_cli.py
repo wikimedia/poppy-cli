@@ -1,5 +1,6 @@
 import json
 import unittest
+from copy import deepcopy
 from unittest import mock
 
 from click.testing import CliRunner
@@ -8,14 +9,9 @@ from kafka.admin import KafkaAdminClient
 from poppy import cli
 from poppy.messsaging import Queue
 
-from .utils import (
-    bootstrap_kafka_tests,
-    check_kafka_connection,
-    delete_kafka_topic,
-    get_kafka_end_offset,
-    get_kafka_servers,
-)
-
+from .utils import (bootstrap_kafka_tests, check_kafka_connection,
+                    delete_kafka_topic, get_kafka_end_offset,
+                    get_kafka_servers)
 
 CONFIG_TEST_IN_MEMORY_URL = "memory://"
 
@@ -26,7 +22,7 @@ class TestCLIUnit(unittest.TestCase):
     def setUp(self):
         self.broker_url = CONFIG_TEST_IN_MEMORY_URL
         self.queue_name = "test-message-queue"
-        self.config = Queue.get_default_config()
+        self.config = deepcopy(Queue.get_default_config())
         self.config["BROKER_URL"] = self.broker_url
         self.config["QUEUE_NAME"] = self.queue_name
         self.help_msg = "Show this message and exit."
@@ -115,7 +111,7 @@ class TestCLIIntegrationKombu(unittest.TestCase):
     def setUp(self):
         self.broker_url = CONFIG_TEST_IN_MEMORY_URL
         self.queue_name = "test-message-queue"
-        self.config = Queue.get_default_config()
+        self.config = deepcopy(Queue.get_default_config())
         self.config["BROKER_URL"] = self.broker_url
         self.config["QUEUE_NAME"] = self.queue_name
         self.tq = Queue(self.config)
@@ -241,10 +237,10 @@ class TestCLIIntegrationKafka(unittest.TestCase):
 
         bootstrap_kafka_tests(self.admin_client, self.queue_name)
         self.broker_url = f"kafka://{get_kafka_servers()}"
-        self.config = Queue.get_default_config()
+        self.config = deepcopy(Queue.get_default_config())
         self.config["BROKER_URL"] = self.broker_url
         self.config["QUEUE_NAME"] = self.queue_name
-        self.config["DEQUEUE_TIMEOUT"] = 10
+        self.config["CONSUMER_GROUP_ID"] = self.id()
 
     def tearDown(self):
         delete_kafka_topic(self.admin_client, self.queue_name)

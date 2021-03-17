@@ -4,6 +4,7 @@
 
 import unittest
 from contextlib import closing
+from copy import deepcopy
 from unittest import mock
 
 from kafka.admin import KafkaAdminClient
@@ -11,14 +12,9 @@ from kafka.admin import KafkaAdminClient
 from poppy.engine import KafkaEngine
 from poppy.messsaging import Queue
 
-from .utils import (
-    bootstrap_kafka_tests,
-    check_kafka_connection,
-    delete_kafka_topic,
-    get_kafka_committed_offset,
-    get_kafka_end_offset,
-    get_kafka_servers,
-)
+from .utils import (bootstrap_kafka_tests, check_kafka_connection,
+                    delete_kafka_topic, get_kafka_committed_offset,
+                    get_kafka_end_offset, get_kafka_servers)
 
 
 class TestQueueKombuUnit(unittest.TestCase):
@@ -28,7 +24,7 @@ class TestQueueKombuUnit(unittest.TestCase):
         self.broker_url = "memory://"
         self.queue_name = "test-message-queue"
 
-        self.config = Queue.get_default_config()
+        self.config = deepcopy(Queue.get_default_config())
         self.config["BROKER_URL"] = self.broker_url
         self.config["QUEUE_NAME"] = self.queue_name
 
@@ -94,7 +90,7 @@ class TestQueueKombuIntegration(unittest.TestCase):
     def setUp(self):
         self.broker_url = "memory://"
         self.queue_name = "test-message-queue"
-        self.config = Queue.get_default_config()
+        self.config = deepcopy(Queue.get_default_config())
         self.config["BROKER_URL"] = self.broker_url
         self.config["QUEUE_NAME"] = self.queue_name
         self.tq = Queue(self.config)
@@ -183,7 +179,7 @@ class TestQueueKafkaUnit(unittest.TestCase):
         self.broker_url = "kafka://kafka_hostname1;kafka_hostname2"
         self.queue_name = "test-message-queue"
 
-        self.config = Queue.get_default_config()
+        self.config = deepcopy(Queue.get_default_config())
         self.config["BROKER_URL"] = self.broker_url
         self.config["QUEUE_NAME"] = self.queue_name
 
@@ -259,10 +255,10 @@ class TestQueueKafkaIntegration(unittest.TestCase):
 
         bootstrap_kafka_tests(self.admin_client, self.queue_name)
         self.broker_url = f"kafka://{get_kafka_servers()}"
-        self.config = Queue.get_default_config()
+        self.config = deepcopy(Queue.get_default_config())
         self.config["BROKER_URL"] = self.broker_url
         self.config["QUEUE_NAME"] = self.queue_name
-        self.config["DEQUEUE_TIMEOUT"] = 10
+        self.config["CONSUMER_GROUP_ID"] = self.id()
 
     def tearDown(self):
         delete_kafka_topic(self.admin_client, self.queue_name)
