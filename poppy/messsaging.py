@@ -3,11 +3,11 @@ from typing import Dict, Union
 from poppy.engine import ConfigDict, KafkaEngine, KombuEngine
 
 
-class TaskQueue:
+class Queue:
     """
-    Task queue implementation
+    Message queue implementation
 
-    :param config: TaskQueue config
+    :param config: Message queue config
     """
 
     def __init__(self, config: ConfigDict):
@@ -21,8 +21,8 @@ class TaskQueue:
             return KafkaEngine(self.config)
         return KombuEngine(self.config)
 
-    def enqueue(self, task: Dict):
-        self.engine.enqueue(task)
+    def enqueue(self, message: Dict):
+        self.engine.enqueue(message)
 
     def dequeue(self) -> str:
         return self.engine.dequeue()
