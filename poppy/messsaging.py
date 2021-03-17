@@ -1,5 +1,6 @@
 from typing import Dict, Union
 
+from poppy.engine import DEFAULT_CONFIG as ENGINE_DEFAULT_CONFIG
 from poppy.engine import ConfigDict, KafkaEngine, KombuEngine
 
 
@@ -21,15 +22,15 @@ class Queue:
             return KafkaEngine(self.config)
         return KombuEngine(self.config)
 
-    def enqueue(self, message: Dict):
+    def enqueue(self, message: Dict) -> None:
         self.engine.enqueue(message)
 
     def dequeue(self) -> str:
         return self.engine.dequeue()
 
-    def close(self):
+    def close(self) -> None:
         self.engine.close()
 
     @staticmethod
-    def get_default_config():
-        return {**KombuEngine.get_default_config(), **KafkaEngine.get_default_config()}
+    def get_default_config() -> ConfigDict:
+        return ENGINE_DEFAULT_CONFIG
