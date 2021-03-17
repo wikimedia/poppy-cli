@@ -17,29 +17,33 @@ from .utils import (
 )
 
 
+CONFIG_TEST_IN_MEMORY_URL = "memory://"
+
+
 class TestCLIUnit(unittest.TestCase):
     """Tests for poppy CLI"""
 
     def setUp(self):
-        self.broker_url = "memory://"
+        self.broker_url = CONFIG_TEST_IN_MEMORY_URL
         self.queue_name = "test-message-queue"
         self.config = Queue.get_default_config()
         self.config["BROKER_URL"] = self.broker_url
         self.config["QUEUE_NAME"] = self.queue_name
+        self.help_msg = "Show this message and exit."
 
     def test_cli_main_help(self):
         """Test that main CLI group returns a help with the right args."""
         runner = CliRunner()
         help_result = runner.invoke(cli.main, ["--help"])
         self.assertTrue(help_result.exit_code == 0)
-        self.assertTrue("Show this message and exit." in help_result.output)
+        self.assertTrue(self.help_msg in help_result.output)
 
     def test_cli_enqueue_help(self):
         """Test that enqueue CLI returns a help with the right args."""
         runner = CliRunner()
         help_result = runner.invoke(cli.enqueue, ["--help"])
         self.assertTrue(help_result.exit_code == 0)
-        self.assertTrue("Show this message and exit." in help_result.output)
+        self.assertTrue(self.help_msg in help_result.output)
         self.assertTrue("Enqueue a message to the queue" in help_result.output)
         self.assertTrue("--message-meta" in help_result.output)
 
@@ -48,7 +52,7 @@ class TestCLIUnit(unittest.TestCase):
         runner = CliRunner()
         help_result = runner.invoke(cli.dequeue, ["--help"])
         self.assertTrue(help_result.exit_code == 0)
-        self.assertTrue("Show this message and exit." in help_result.output)
+        self.assertTrue(self.help_msg in help_result.output)
         self.assertTrue("Dequeue message from the queue" in help_result.output)
 
     def test_cli_unit_enqueue(self):
@@ -74,7 +78,7 @@ class TestCLIUnit(unittest.TestCase):
             )
             mock_message_queue.assert_called_once_with(
                 {
-                    "BROKER_URL": "memory://",
+                    "BROKER_URL": self.broker_url,
                     "QUEUE_NAME": "test-message-queue",
                     "CONNECTION_TIMEOUT": 5,
                 }
@@ -109,7 +113,7 @@ class TestCLIIntegrationKombu(unittest.TestCase):
     """Integration tests for poppy CLI backed by kombu"""
 
     def setUp(self):
-        self.broker_url = "memory://"
+        self.broker_url = CONFIG_TEST_IN_MEMORY_URL
         self.queue_name = "test-message-queue"
         self.config = Queue.get_default_config()
         self.config["BROKER_URL"] = self.broker_url

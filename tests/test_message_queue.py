@@ -77,7 +77,7 @@ class TestQueueKombuUnit(unittest.TestCase):
         """Test that Queue mock dequeues message"""
 
         msg = mock.Mock()
-        msg.body = b'{"key": "value"}'
+        msg.body = b'{"key-kombu-dequeue": "value"}'
         tq = Queue(self.config)
         tq.engine.queue.get.return_value = msg
         result = tq.dequeue()
@@ -85,7 +85,7 @@ class TestQueueKombuUnit(unittest.TestCase):
             block=self.config["BLOCKING_DEQUEUE"],
             timeout=self.config["DEQUEUE_TIMEOUT"],
         )
-        self.assertEqual(result, b'{"key": "value"}')
+        self.assertEqual(result, b'{"key-kombu-dequeue": "value"}')
 
 
 class TestQueueKombuIntegration(unittest.TestCase):
@@ -142,12 +142,12 @@ class TestQueueKombuIntegration(unittest.TestCase):
 
         self.assertEqual(self.tq.engine.queue.qsize(), 0)
 
-        message = {"key": "value"}
+        message = {"key-kombu-dequeue-integration": "value"}
         self.tq.enqueue(message)
         self.assertEqual(self.tq.engine.queue.qsize(), 1)
 
         result = self.tq.dequeue()
-        self.assertEqual(result, b'{"key": "value"}')
+        self.assertEqual(result, b'{"key-kombu-dequeue-integration": "value"}')
         self.assertEqual(self.tq.engine.queue.qsize(), 0)
 
     def test_message_queue_integration_dequeue_multiple_messages(self):
@@ -296,13 +296,13 @@ class TestQueueKafkaIntegration(unittest.TestCase):
         """Test that Queue dequeues single message properly"""
         tq = Queue(self.config)
         self.assertEqual(get_kafka_end_offset(tq, self.queue_name), 0)
-        message = {"key": "value"}
+        message = {"key-kafka-dequeue": "value"}
         tq.enqueue(message)
         tq.engine.producer.close()
         self.assertEqual(get_kafka_end_offset(tq, self.queue_name), 1)
         result = tq.dequeue()
         tq.engine.consumer.commit()
-        self.assertEqual(result, b'{"key": "value"}')
+        self.assertEqual(result, b'{"key-kafka-dequeue": "value"}')
         self.assertEqual(get_kafka_committed_offset(tq, self.queue_name), 1)
 
     def test_message_queue_integration_dequeue_multiple_messages(self):
