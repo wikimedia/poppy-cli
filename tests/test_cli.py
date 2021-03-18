@@ -209,6 +209,40 @@ class TestCLIIntegrationKombu(unittest.TestCase):
         result = json.loads(result.output)
         self.assertDictEqual(result, message)
 
+    def test_cli_integration_dequeues_batch(self):
+        """Test that CLI dequeues batched message from CLI"""
+
+        self.assertEqual(self.tq.engine.queue.qsize(), 0)
+        for i in range(3):
+            message = {f"cli-input-key-{i}": f"cli-input-value-{i}"}
+            self.tq.enqueue(message)
+
+        self.assertEqual(self.tq.engine.queue.qsize(), 3)
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli.main,
+            [
+                "--broker-url",
+                self.broker_url,
+                "--queue-name",
+                self.queue_name,
+                "dequeue",
+                "--batch",
+                "3",
+            ],
+            obj={},
+        )
+
+        self.assertTrue(result.exit_code == 0)
+
+        expected_messages = [
+            '{"cli-input-key-0": "cli-input-value-0"}\n',
+            '{"cli-input-key-1": "cli-input-value-1"}\n',
+            '{"cli-input-key-2": "cli-input-value-2"}\n',
+        ]
+        self.assertEqual(result.output, "".join(expected_messages))
+
     def test_cli_integration_dequeues_empty(self):
         """Test that CLI dequeues message from CLI"""
 
@@ -330,6 +364,42 @@ class TestCLIIntegrationKafka(unittest.TestCase):
         )
         self.assertTrue(result.exit_code == 0)
         self.assertEqual({"cli-input-key": "cli-input-value"}, message)
+
+    def test_cli_integration_dequeues_batch(self):
+        """Test that CLI dequeues batched message from CLI"""
+        tq = Queue(self.config)
+
+        self.assertEqual(get_kafka_end_offset(tq, self.queue_name), 0)
+        for i in range(3):
+            message = {f"cli-input-key-{i}": f"cli-input-value-{i}"}
+            tq.enqueue(message)
+        tq.engine.producer.close()
+
+        self.assertEqual(get_kafka_end_offset(tq, self.queue_name), 3)
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli.main,
+            [
+                "--broker-url",
+                self.broker_url,
+                "--queue-name",
+                self.queue_name,
+                "dequeue",
+                "--batch",
+                "3",
+            ],
+            obj={},
+        )
+
+        self.assertTrue(result.exit_code == 0)
+
+        expected_messages = [
+            '{"cli-input-key-0": "cli-input-value-0"}\n',
+            '{"cli-input-key-1": "cli-input-value-1"}\n',
+            '{"cli-input-key-2": "cli-input-value-2"}\n',
+        ]
+        self.assertEqual(result.output, "".join(expected_messages))
 
     def test_cli_integration_dequeues_empty(self):
         """Test that CLI dequeues message from CLI"""

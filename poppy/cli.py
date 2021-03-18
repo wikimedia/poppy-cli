@@ -52,6 +52,13 @@ def enqueue(ctx: click.core.Context, message_meta: Tuple[Tuple[str, str]]):
 
 @main.command()
 @click.option(
+    "--batch",
+    type=int,
+    help="Number of messages to be dequeued",
+    default=1,
+    show_default=True,
+)
+@click.option(
     "--blocking-dequeue",
     type=bool,
     help="Blocking dequeue operation",
@@ -92,6 +99,7 @@ def enqueue(ctx: click.core.Context, message_meta: Tuple[Tuple[str, str]]):
 @click.pass_context
 def dequeue(
     ctx: click.core.Context,
+    batch: int,
     blocking_dequeue: bool,
     blocking_dequeue_timeout: int,
     dequeue_raise_on_empty: bool,
@@ -111,5 +119,6 @@ def dequeue(
         ctx.obj["CONSUMER_GROUP_ID"] = consumer_group_id
 
     with closing(Queue(ctx.obj)) as queue:
-        message = queue.dequeue()
-    click.echo(message)
+        for _ in range(batch):
+            message = queue.dequeue()
+            click.echo(message)
