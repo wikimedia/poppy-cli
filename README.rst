@@ -5,6 +5,13 @@ poppy-cli
 .. image:: https://github.com/johngian/poppy-cli/actions/workflows/tests.yml/badge.svg?branch=master
         :target: https://github.com/johngian/poppy-cli/actions/workflows/tests.yml
 
+.. image:: https://github.com/johngian/poppy-cli/actions/workflows/docs.yml/badge.svg?branch=master
+        :target: https://johngian.github.io/poppy-cli/
+
+.. image:: https://sonarcloud.io/api/project_badges/measure?project=johngian_poppy-cli&metric=alert_status
+        :target: https://sonarcloud.io/api/project_badges/measure?project=johngian_poppy-cli&metric=sqale_rating
+
+
 
 Poppy is a simple message queue CLI tool
 
