@@ -44,8 +44,23 @@ class TestCLIUnit(unittest.TestCase):
         help_result = runner.invoke(cli.enqueue, ["--help"])
         self.assertTrue(help_result.exit_code == 0)
         self.assertTrue(self.help_msg in help_result.output)
-        self.assertTrue("Enqueue a message to the queue" in help_result.output)
-        self.assertTrue("--message-meta" in help_result.output)
+        self.assertTrue(
+            "Enqueue a message in the key/value format to the queue"
+            in help_result.output
+        )
+        self.assertTrue("--message-entry" in help_result.output)
+
+    def test_cli_enqueue_raw_help(self):
+        """Test that enqueue CLI returns a help with the right args."""
+        runner = CliRunner()
+        help_result = runner.invoke(cli.enqueue_raw, ["--help"])
+        self.assertTrue(help_result.exit_code == 0)
+        self.assertTrue(self.help_msg in help_result.output)
+        self.assertTrue(
+            "Enqueue raw json formatted messages to the queue" in help_result.output
+        )
+        self.assertTrue("--message-input" in help_result.output)
+        self.assertTrue("--raise-on-serialization-error" in help_result.output)
 
     def test_cli_dequeue_help(self):
         """Test that dequeue CLI returns a help with the right args."""
@@ -70,7 +85,7 @@ class TestCLIUnit(unittest.TestCase):
                     "--queue-name",
                     self.queue_name,
                     "enqueue",
-                    "--message-meta",
+                    "--message-entry",
                     "cli-input-key",
                     "cli-input-value",
                 ],
@@ -86,6 +101,111 @@ class TestCLIUnit(unittest.TestCase):
             mock_message_obj.enqueue.assert_called_once_with(
                 {"cli-input-key": "cli-input-value"}
             )
+
+    def test_cli_unit_enqueue_raw(self):
+        """Test that CLI enqueue raw method adds multiple messages properly"""
+
+        with mock.patch("poppy.cli.Queue") as mock_message_queue:
+            mock_message_obj = mock.Mock()
+            mock_message_queue.return_value = mock_message_obj
+
+            runner = CliRunner()
+            with runner.isolated_filesystem():
+                with open("raw_input.txt", "w") as f:
+                    f.write(
+                        '{"raw-key-1": "raw-value-1"}\n{"raw-key-2": "raw-value-2"}\n'
+                    )
+
+                runner.invoke(
+                    cli.main,
+                    [
+                        "--broker-url",
+                        self.broker_url,
+                        "--queue-name",
+                        self.queue_name,
+                        "enqueue-raw",
+                        "--message-input",
+                        "raw_input.txt",
+                    ],
+                    obj={},
+                )
+
+                mock_message_queue.assert_called_once_with(
+                    {
+                        "BROKER_URL": self.broker_url,
+                        "QUEUE_NAME": "test-message-queue",
+                        "CONNECTION_TIMEOUT": 5,
+                    }
+                )
+                mock_message_obj.enqueue.assert_has_calls(
+                    [
+                        mock.call({"raw-key-1": "raw-value-1"}),
+                        mock.call({"raw-key-2": "raw-value-2"}),
+                    ]
+                )
+
+    def test_cli_unit_enqueue_raw_invalid_json(self):
+        """Test that CLI enqueue raw prints error for invalid json input"""
+
+        with mock.patch("poppy.cli.Queue") as mock_message_queue:
+            mock_message_obj = mock.Mock()
+            mock_message_queue.return_value = mock_message_obj
+
+            runner = CliRunner()
+            with runner.isolated_filesystem():
+                with open("raw_input.txt", "w") as f:
+                    f.write('{"valid": "input"}\nwrong:input')
+
+                result = runner.invoke(
+                    cli.main,
+                    [
+                        "--broker-url",
+                        self.broker_url,
+                        "--queue-name",
+                        self.queue_name,
+                        "enqueue-raw",
+                        "--message-input",
+                        "raw_input.txt",
+                    ],
+                    obj={},
+                )
+
+            self.assertTrue(result.exit_code == 0)
+            expected_output = [
+                "Cannot decode JSON: 'wrong:input'\n",
+                "Expecting value: line 1 column 1 (char 0)\n",
+            ]
+            self.assertEqual(result.output, "".join(expected_output))
+
+    def test_cli_unit_enqueue_raw_invalid_json_raises(self):
+        """Test that CLI enqueue raw prints error for invalid json input"""
+
+        with mock.patch("poppy.cli.Queue") as mock_message_queue:
+            mock_message_obj = mock.Mock()
+            mock_message_queue.return_value = mock_message_obj
+
+            runner = CliRunner()
+            with runner.isolated_filesystem():
+                with open("raw_input.txt", "w") as f:
+                    f.write('{"valid": "input"}\nwrong:input')
+
+                result = runner.invoke(
+                    cli.main,
+                    [
+                        "--broker-url",
+                        self.broker_url,
+                        "--queue-name",
+                        self.queue_name,
+                        "enqueue-raw",
+                        "--message-input",
+                        "raw_input.txt",
+                        "--raise-on-serialization-error",
+                        "True",
+                    ],
+                    obj={},
+                )
+
+            self.assertTrue(result.exit_code == 1)
 
     def test_cli_unit_dequeue(self):
         """Test that CLI dequeue method pops messages properly"""
@@ -124,6 +244,37 @@ class TestCLIIntegrationKombu(unittest.TestCase):
         self.tq.engine.queue.queue.delete()
         self.tq.close()
 
+    def test_cli_integration_enqueues_raw(self):
+        """Test that CLI enqueues raw messages from CLI options"""
+
+        self.assertEqual(self.tq.engine.queue.qsize(), 0)
+        runner = CliRunner()
+
+        with runner.isolated_filesystem():
+            with open("raw_input.txt", "w") as f:
+                f.write('{"raw-key-1": "raw-value-1"}\n{"raw-key-2": "raw-value-2"}\n')
+
+            result = runner.invoke(
+                cli.main,
+                [
+                    "--broker-url",
+                    self.broker_url,
+                    "--queue-name",
+                    self.queue_name,
+                    "enqueue-raw",
+                    "--message-input",
+                    "raw_input.txt",
+                ],
+                obj={},
+            )
+        self.assertTrue(result.exit_code == 0)
+        self.assertEqual(self.tq.engine.queue.qsize(), 2)
+
+        result = self.tq.dequeue()
+        self.assertEqual(result, b'{"raw-key-1": "raw-value-1"}')
+        result = self.tq.dequeue()
+        self.assertEqual(result, b'{"raw-key-2": "raw-value-2"}')
+
     def test_cli_integration_enqueues_message(self):
         """Test that CLI enqueues message from CLI options"""
 
@@ -138,7 +289,7 @@ class TestCLIIntegrationKombu(unittest.TestCase):
                 "--queue-name",
                 self.queue_name,
                 "enqueue",
-                "--message-meta",
+                "--message-entry",
                 "cli-input-key",
                 "cli-input-value",
             ],
@@ -164,13 +315,13 @@ class TestCLIIntegrationKombu(unittest.TestCase):
                 "--queue-name",
                 self.queue_name,
                 "enqueue",
-                "--message-meta",
+                "--message-entry",
                 "k1",
                 "v1",
-                "--message-meta",
+                "--message-entry",
                 "k2",
                 "v2",
-                "--message-meta",
+                "--message-entry",
                 "k3",
                 "v3",
             ],
@@ -283,6 +434,39 @@ class TestCLIIntegrationKafka(unittest.TestCase):
     def tearDown(self):
         delete_kafka_topic(self.admin_client, self.queue_name)
 
+    def test_cli_integration_enqueues_raw(self):
+        """Test that CLI enqueues raw messages from CLI options"""
+
+        tq = Queue(self.config)
+        self.assertEqual(get_kafka_end_offset(tq, self.queue_name), 0)
+
+        runner = CliRunner()
+
+        with runner.isolated_filesystem():
+            with open("raw_input.txt", "w") as f:
+                f.write('{"raw-key-1": "raw-value-1"}\n{"raw-key-2": "raw-value-2"}\n')
+
+            result = runner.invoke(
+                cli.main,
+                [
+                    "--broker-url",
+                    self.broker_url,
+                    "--queue-name",
+                    self.queue_name,
+                    "enqueue-raw",
+                    "--message-input",
+                    "raw_input.txt",
+                ],
+                obj={},
+            )
+        self.assertTrue(result.exit_code == 0)
+        self.assertEqual(get_kafka_end_offset(tq, self.queue_name), 2)
+
+        result = tq.dequeue()
+        self.assertEqual(result, b'{"raw-key-1": "raw-value-1"}')
+        result = tq.dequeue()
+        self.assertEqual(result, b'{"raw-key-2": "raw-value-2"}')
+
     def test_cli_integration_enqueues_message(self):
         """Test that CLI enqueues message from CLI options"""
         tq = Queue(self.config)
@@ -297,7 +481,7 @@ class TestCLIIntegrationKafka(unittest.TestCase):
                 "--queue-name",
                 self.queue_name,
                 "enqueue",
-                "--message-meta",
+                "--message-entry",
                 "cli-input-key",
                 "cli-input-value",
             ],
@@ -323,13 +507,13 @@ class TestCLIIntegrationKafka(unittest.TestCase):
                 "--queue-name",
                 self.queue_name,
                 "enqueue",
-                "--message-meta",
+                "--message-entry",
                 "k1",
                 "v1",
-                "--message-meta",
+                "--message-entry",
                 "k2",
                 "v2",
-                "--message-meta",
+                "--message-entry",
                 "k3",
                 "v3",
             ],

@@ -1,5 +1,9 @@
 """Console script for poppy."""
+import json
+import sys
 from contextlib import closing
+from io import TextIOWrapper
+from json.decoder import JSONDecodeError
 from typing import Dict, Tuple
 
 import click
@@ -34,20 +38,56 @@ def main(
 
 @main.command()
 @click.option(
-    "--message-meta",
+    "--message-entry",
     type=(str, str),
-    help="Message metadata key/value pair",
+    help="Message entry key/value pair",
     multiple=True,
     required=True,
 )
 @click.pass_context
-def enqueue(ctx: click.core.Context, message_meta: Tuple[Tuple[str, str]]):
-    """Enqueue a message to the queue"""
+def enqueue(ctx: click.core.Context, message_entry: Tuple[Tuple[str, str]]):
+    """Enqueue a message in the key/value format to the queue"""
 
     # Convert input key/value to message
-    message: Dict[str, str] = {k: v for (k, v) in message_meta}
+    message: Dict[str, str] = {k: v for (k, v) in message_entry}
     with closing(Queue(ctx.obj)) as queue:
         queue.enqueue(message)
+
+
+@main.command()
+@click.option(
+    "--message-input",
+    type=click.File("r"),
+    help="Raw messages input (line separated)",
+    required=True,
+    default=sys.stdin,
+    show_default=True,
+)
+@click.option(
+    "--raise-on-serialization-error",
+    type=bool,
+    help="Raise error when input is not json serializable",
+    default=False,
+    show_default=True,
+)
+@click.pass_context
+def enqueue_raw(
+    ctx: click.core.Context,
+    message_input: TextIOWrapper,
+    raise_on_serialization_error: bool,
+):
+    """Enqueue raw json formatted messages to the queue"""
+
+    with closing(Queue(ctx.obj)) as queue:
+        for line in message_input:
+            try:
+                message = json.loads(line)
+                queue.enqueue(message)
+            except JSONDecodeError as exc:
+                if raise_on_serialization_error:
+                    raise exc
+                click.echo(f"Cannot decode JSON: {repr(line)}")
+                click.echo(exc, err=True)
 
 
 @main.command()
