@@ -1,12 +1,7 @@
-name: Type checking
+name: Build docs
 
 on:
     push:
-        branches:
-            - "master"
-        tags:
-            - "v*"
-    pull_request:
         branches:
             - "master"
 
@@ -24,6 +19,10 @@ jobs:
                   python -m pip install --upgrade pip
                   pip install -r requirements_dev.txt
                   pip install -e .
-            - name: Type checking with mypy
-              run: |
-                  MYPYPATH=$GITHUB_WORKSPACE/stubs/ mypy poppy
+            - name: Build docs
+              run: make docs
+            - name: Deploy docs as github page
+              uses: peaceiris/actions-gh-pages@v3
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: ./docs
