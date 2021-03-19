@@ -45,8 +45,6 @@ Supported backends
       * Azure
          * Service Bus
          * Storage Queues
-      * SoftLayer
-         * Message Queue
    * Zookeeper
    * Consul
    * Etcd
