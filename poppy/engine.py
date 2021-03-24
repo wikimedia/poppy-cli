@@ -49,6 +49,7 @@ class KombuEngine:
         self.conn: Connection = Connection(
             self.broker_url, connect_timeout=self.connection_timeout
         )
+        self.conn.ensure_connection(timeout=self.connection_timeout)
         self.queue: SimpleQueue = self.conn.SimpleQueue(
             self.name, serializer=self.serializer
         )
