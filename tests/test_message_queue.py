@@ -247,6 +247,53 @@ class TestQueueKafkaUnit(unittest.TestCase):
         tq.engine.consumer.__next__.assert_called_once()
         self.assertDictEqual(result, message)
 
+    @mock.patch("poppy.engine.KafkaConsumer", autospec=True)
+    @mock.patch("poppy.engine.KafkaProducer", autospec=True)
+    def test_message_queue_unit_dequeue_empty(self, mock_producer, mock_consumer):
+        """Test that Queue mock dequeues empty message"""
+
+        tq = Queue(self.config)
+        tq.engine.consumer.__next__.side_effect = StopIteration()
+        self.assertEqual(tq.dequeue(), "{}")
+
+    @mock.patch("poppy.engine.KafkaConsumer", autospec=True)
+    @mock.patch("poppy.engine.KafkaProducer", autospec=True)
+    def test_message_queue_unit_dequeue_raises_empty(
+        self, mock_producer, mock_consumer
+    ):
+        """Test that Queue mock dequeues raises on empty message"""
+
+        self.config["RAISE_ON_EMPTY_DEQUEUE"] = True
+        tq = Queue(self.config)
+        tq.engine.consumer.__next__.side_effect = StopIteration()
+        with self.assertRaises(StopIteration):
+            tq.dequeue()
+
+    @mock.patch("poppy.engine.KafkaConsumer", autospec=True)
+    @mock.patch("poppy.engine.KafkaProducer", autospec=True)
+    def test_message_queue_unit_dequeue_blocking(self, mock_producer, mock_consumer):
+        """Test that Queue mock blocks dequeuing message"""
+
+        self.config["BLOCKING_DEQUEUE"] = True
+        tq = Queue(self.config)
+        message = {"key": "value"}
+        msg = mock.Mock()
+        msg.value = message
+        tq.engine.consumer.__next__.side_effect = [
+            msg,
+            StopIteration(),
+            StopIteration(),
+            StopIteration(),
+            msg,
+        ]
+        result = tq.dequeue()
+        tq.engine.consumer.__next__.assert_called_once()
+        self.assertDictEqual(result, message)
+
+        result = tq.dequeue()
+        self.assertEqual(tq.engine.consumer.__next__.call_count, 5)
+        self.assertDictEqual(result, message)
+
 
 @unittest.skipIf(check_kafka_connection() is False, "Kafka connection unavailable")
 class TestQueueKafkaIntegration(unittest.TestCase):

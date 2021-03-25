@@ -228,6 +228,29 @@ class TestCLIUnit(unittest.TestCase):
             mock_message_queue.assert_called_once_with(self.config)
             mock_message_obj.dequeue.assert_called_once_with()
 
+    def test_cli_unit_dequeue_batch(self):
+        """Test that CLI dequeue method pops batch messages properly"""
+
+        with mock.patch("poppy.cli.Queue") as mock_message_queue:
+            mock_message_obj = mock.Mock()
+            mock_message_queue.return_value = mock_message_obj
+            runner = CliRunner()
+            runner.invoke(
+                cli.main,
+                [
+                    "--broker-url",
+                    self.broker_url,
+                    "--queue-name",
+                    self.queue_name,
+                    "dequeue",
+                    "--batch",
+                    "10",
+                ],
+                obj={},
+            )
+            mock_message_queue.assert_called_once_with(self.config)
+            self.assertEqual(mock_message_obj.dequeue.call_count, 10)
+
 
 class TestCLIIntegrationKombu(unittest.TestCase):
     """Integration tests for poppy CLI backed by kombu"""
