@@ -149,6 +149,10 @@ class KafkaEngine:
         raise ValueError("Broker URL is misformatted")
 
     @property
+    def is_blocking_dequeue(self) -> bool:
+        return self.config.get("BLOCKING_DEQUEUE", DEFAULT_CONFIG["BLOCKING_DEQUEUE"])
+
+    @property
     def raise_on_empty_dequeue(self) -> bool:
         return self.config.get(
             "RAISE_ON_EMPTY_DEQUEUE",
@@ -195,12 +199,17 @@ class KafkaEngine:
 
         :returns: A dict with message related key/value information
         """
-        try:
-            return next(self.consumer).value
-        except StopIteration as e:
-            if self.raise_on_empty_dequeue:
-                raise e
-            return "{}"
+        while True:
+            try:
+                return next(self.consumer).value
+            except StopIteration as e:
+                if self.raise_on_empty_dequeue:
+                    raise e
+
+                if self.is_blocking_dequeue:
+                    continue
+
+                return "{}"
 
     def close(self) -> None:
         """Close connections and commit offset"""
