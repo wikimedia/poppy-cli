@@ -1,7 +1,7 @@
 import json
 import sys
 from queue import Empty
-from typing import Dict, List
+from typing import Dict, List, Optional, Union
 
 from kafka import KafkaConsumer, KafkaProducer
 from kombu.connection import Connection
@@ -17,8 +17,7 @@ class ConfigDict(TypedDict, total=False):
     BROKER_URL: str
     QUEUE_NAME: str
     CONNECTION_TIMEOUT: int
-    BLOCKING_DEQUEUE: bool
-    DEQUEUE_TIMEOUT: int
+    DEQUEUE_TIMEOUT: Optional[int]
     RAISE_ON_EMPTY_DEQUEUE: bool
     CONSUMER_GROUP_ID: str
     CONSUMER_AUTOCOMMIT: bool
@@ -27,8 +26,7 @@ class ConfigDict(TypedDict, total=False):
 
 DEFAULT_CONFIG = ConfigDict(
     CONNECTION_TIMEOUT=5,
-    BLOCKING_DEQUEUE=False,
-    DEQUEUE_TIMEOUT=5,
+    DEQUEUE_TIMEOUT=None,
     RAISE_ON_EMPTY_DEQUEUE=False,
     CONSUMER_AUTOCOMMIT=True,
     CONSUMER_AUTO_OFFSET_RESET="earliest",
@@ -65,11 +63,7 @@ class KombuEngine:
         )
 
     @property
-    def is_blocking_dequeue(self) -> bool:
-        return self.config.get("BLOCKING_DEQUEUE", DEFAULT_CONFIG["BLOCKING_DEQUEUE"])
-
-    @property
-    def blocking_dequeue_timeout(self) -> int:
+    def blocking_dequeue_timeout(self) -> Optional[int]:
         return self.config.get("DEQUEUE_TIMEOUT", DEFAULT_CONFIG["DEQUEUE_TIMEOUT"])
 
     @property
@@ -89,12 +83,10 @@ class KombuEngine:
     def dequeue(self) -> str:
         """Dequeue a message from the queue
 
-        :returns: A dict with message related key/value information
+        :returns: String with message consumed
         """
         try:
-            msg = self.queue.get(
-                block=self.is_blocking_dequeue, timeout=self.blocking_dequeue_timeout
-            )
+            msg = self.queue.get(block=True, timeout=self.blocking_dequeue_timeout)
             msg.ack()
             return msg.body
         except Empty as e:
@@ -149,10 +141,6 @@ class KafkaEngine:
         raise ValueError("Broker URL is misformatted")
 
     @property
-    def is_blocking_dequeue(self) -> bool:
-        return self.config.get("BLOCKING_DEQUEUE", DEFAULT_CONFIG["BLOCKING_DEQUEUE"])
-
-    @property
     def raise_on_empty_dequeue(self) -> bool:
         return self.config.get(
             "RAISE_ON_EMPTY_DEQUEUE",
@@ -160,12 +148,14 @@ class KafkaEngine:
         )
 
     @property
-    def blocking_dequeue_timeout(self) -> int:
-        timeout: int = self.config.get(
+    def blocking_dequeue_timeout(self) -> Union[float, int]:
+        timeout: Optional[int] = self.config.get(
             "DEQUEUE_TIMEOUT", DEFAULT_CONFIG["DEQUEUE_TIMEOUT"]
         )
 
-        return timeout * 1000
+        if timeout:
+            return timeout * 1000
+        return float("inf")
 
     @property
     def group_id(self) -> str:
@@ -199,17 +189,12 @@ class KafkaEngine:
 
         :returns: A dict with message related key/value information
         """
-        while True:
-            try:
-                return next(self.consumer).value
-            except StopIteration as e:
-                if self.raise_on_empty_dequeue:
-                    raise e
-
-                if self.is_blocking_dequeue:
-                    continue
-
-                return "{}"
+        try:
+            return next(self.consumer).value
+        except StopIteration as e:
+            if self.raise_on_empty_dequeue:
+                raise e
+            return "{}"
 
     def close(self) -> None:
         """Close connections and commit offset"""
