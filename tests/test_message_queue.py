@@ -83,7 +83,7 @@ class TestQueueKombuUnit(unittest.TestCase):
         tq.engine.queue.get.return_value = msg
         result = tq.dequeue()
         tq.engine.queue.get.assert_called_once_with(
-            block=self.config["BLOCKING_DEQUEUE"],
+            block=True,
             timeout=self.config["DEQUEUE_TIMEOUT"],
         )
         self.assertEqual(result, b'{"key-kombu-dequeue": "value"}')
@@ -206,7 +206,7 @@ class TestQueueKafkaUnit(unittest.TestCase):
             auto_offset_reset=self.config["CONSUMER_AUTO_OFFSET_RESET"],
             enable_auto_commit=self.config["CONSUMER_AUTOCOMMIT"],
             group_id="poppy-test-message-queue",
-            consumer_timeout_ms=5000,
+            consumer_timeout_ms=float("inf"),
         )
 
     @mock.patch("poppy.engine.KafkaConsumer", autospec=True)
@@ -268,31 +268,6 @@ class TestQueueKafkaUnit(unittest.TestCase):
         tq.engine.consumer.__next__.side_effect = StopIteration()
         with self.assertRaises(StopIteration):
             tq.dequeue()
-
-    @mock.patch("poppy.engine.KafkaConsumer", autospec=True)
-    @mock.patch("poppy.engine.KafkaProducer", autospec=True)
-    def test_message_queue_unit_dequeue_blocking(self, mock_producer, mock_consumer):
-        """Test that Queue mock blocks dequeuing message"""
-
-        self.config["BLOCKING_DEQUEUE"] = True
-        tq = Queue(self.config)
-        message = {"key": "value"}
-        msg = mock.Mock()
-        msg.value = message
-        tq.engine.consumer.__next__.side_effect = [
-            msg,
-            StopIteration(),
-            StopIteration(),
-            StopIteration(),
-            msg,
-        ]
-        result = tq.dequeue()
-        tq.engine.consumer.__next__.assert_called_once()
-        self.assertDictEqual(result, message)
-
-        result = tq.dequeue()
-        self.assertEqual(tq.engine.consumer.__next__.call_count, 5)
-        self.assertDictEqual(result, message)
 
 
 @unittest.skipIf(check_kafka_connection() is False, "Kafka connection unavailable")

@@ -99,13 +99,6 @@ def enqueue_raw(
     show_default=True,
 )
 @click.option(
-    "--blocking-dequeue",
-    type=bool,
-    help="Blocking dequeue operation",
-    default=DEFAULT_CONFIG["BLOCKING_DEQUEUE"],
-    show_default=True,
-)
-@click.option(
     "--blocking-dequeue-timeout",
     type=int,
     help="Dequeue block timeout",
@@ -140,7 +133,6 @@ def enqueue_raw(
 def dequeue(
     ctx: click.core.Context,
     batch: int,
-    blocking_dequeue: bool,
     blocking_dequeue_timeout: int,
     dequeue_raise_on_empty: bool,
     consumer_group_id: str,
@@ -149,7 +141,6 @@ def dequeue(
 ):
     """Dequeue message from the queue"""
 
-    ctx.obj["BLOCKING_DEQUEUE"] = blocking_dequeue
     ctx.obj["DEQUEUE_TIMEOUT"] = blocking_dequeue_timeout
     ctx.obj["RAISE_ON_EMPTY_DEQUEUE"] = dequeue_raise_on_empty
     ctx.obj["CONSUMER_AUTOCOMMIT"] = consumer_autocommit

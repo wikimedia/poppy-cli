@@ -418,7 +418,7 @@ class TestCLIIntegrationKombu(unittest.TestCase):
         self.assertEqual(result.output, "".join(expected_messages))
 
     def test_cli_integration_dequeues_empty(self):
-        """Test that CLI dequeues message from CLI"""
+        """Test that CLI dequeues empty message from CLI"""
 
         self.assertEqual(self.tq.engine.queue.qsize(), 0)
 
@@ -431,6 +431,8 @@ class TestCLIIntegrationKombu(unittest.TestCase):
                 "--queue-name",
                 self.queue_name,
                 "dequeue",
+                "--blocking-dequeue-timeout",
+                "10",
             ],
             obj={},
         )
@@ -609,7 +611,7 @@ class TestCLIIntegrationKafka(unittest.TestCase):
         self.assertEqual(result.output, "".join(expected_messages))
 
     def test_cli_integration_dequeues_empty(self):
-        """Test that CLI dequeues message from CLI"""
+        """Test that CLI dequeues empty message from CLI"""
         tq = Queue(self.config)
         self.assertEqual(get_kafka_end_offset(tq, self.queue_name), 0)
 
@@ -622,6 +624,8 @@ class TestCLIIntegrationKafka(unittest.TestCase):
                 "--queue-name",
                 self.queue_name,
                 "dequeue",
+                "--blocking-dequeue-timeout",
+                "10",
             ],
             obj={},
         )
