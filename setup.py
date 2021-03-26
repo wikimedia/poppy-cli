@@ -48,6 +48,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/johngian/poppy-cli",
-    version="version='0.2.0'",
+    version="version='0.3.0'",
     zip_safe=False,
 )
