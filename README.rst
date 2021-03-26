@@ -60,7 +60,7 @@ Credits
 -------
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
-All the heavylifting for messaging is handle by Kombu_.
+All the heavylifting for messaging is handle by kombu_ and `kafka-python <https://github.com/dpkp/kafka-python>`_.
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
