@@ -2,6 +2,12 @@
 History
 =======
 
+0.3.0 (2021-03-26)
+------------------
+* Add automation for code quality, coverage, testing, static analysis
+* Make blocking behaviour consistent
+* Check kombu connection on init
+
 0.2.0 (2021-03-19)
 -------------------
 * Implement batch dequeuing
