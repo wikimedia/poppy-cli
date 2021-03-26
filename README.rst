@@ -33,7 +33,7 @@ Supported backends
    * Kafka
 * Using `kombu`
    * File based
-   * Database backend
+   * SQL backend
       * Engines supported by SQLAlchemy
    * Redis
    * MongoDB
