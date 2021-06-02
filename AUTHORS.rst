@@ -5,7 +5,7 @@ Credits
 Development Lead
 ----------------
 
-* John Giannelos <johngiannelos@gmail.com>
+* Yiannis Giannelos <jgiannelos@wikimedia.org>
 
 Contributors
 ------------
