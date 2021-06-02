@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 """The setup script."""
-import sys
 from setuptools import find_packages, setup
 
 with open("README.rst") as readme_file:
@@ -17,11 +16,11 @@ setup_requirements = []
 test_requirements = []
 
 setup(
-    author="John Giannelos",
-    author_email="johngiannelos@gmail.com",
+    author="Yiannis Giannelos",
+    author_email="jgiannelos@wikimedia.org",
     python_requires=">=3.5",
     classifiers=[
-        "Development Status :: 2 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Natural Language :: English",
@@ -47,7 +46,6 @@ setup(
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
-    url="https://github.com/johngian/poppy-cli",
     version="0.3.0",
     zip_safe=False,
 )

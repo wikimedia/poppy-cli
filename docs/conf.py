@@ -48,8 +48,8 @@ master_doc = "index"
 
 # General information about the project.
 project = "poppy"
-copyright = "2021, John Giannelos"
-author = "John Giannelos"
+copyright = "2007 Free Software Foundation, Inc."
+author = "Yiannis Giannelos"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -125,7 +125,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass
 # [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "poppy.tex", "poppy Documentation", "John Giannelos", "manual"),
+    (master_doc, "poppy.tex", "poppy Documentation", "Yiannis Giannelos", "manual"),
 ]
 
 
