@@ -9,7 +9,7 @@ from unittest import mock
 
 from kafka.admin import KafkaAdminClient
 
-from poppy.engine import KafkaEngine
+from poppy.engine import EmptyQueueException, KafkaEngine
 from poppy.messsaging import Queue
 
 from .utils import (
@@ -265,8 +265,8 @@ class TestQueueKafkaUnit(unittest.TestCase):
 
         self.config["RAISE_ON_EMPTY_DEQUEUE"] = True
         tq = Queue(self.config)
-        tq.engine.consumer.__next__.side_effect = StopIteration()
-        with self.assertRaises(StopIteration):
+        tq.engine.consumer.__next__.side_effect = EmptyQueueException()
+        with self.assertRaises(EmptyQueueException):
             tq.dequeue()
 
 

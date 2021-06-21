@@ -8,7 +8,7 @@ from typing import Dict, Tuple
 
 import click
 
-from poppy.engine import ConfigDict
+from poppy.engine import ConfigDict, EmptyQueueException
 from poppy.messsaging import Queue
 
 DEFAULT_CONFIG: ConfigDict = Queue.get_default_config()
@@ -99,6 +99,13 @@ def enqueue_raw(
     show_default=True,
 )
 @click.option(
+    "--exit-on-empty",
+    type=bool,
+    help="Dequeue until queue is empty. If empty queue is encountered exit with code 100",
+    default=DEFAULT_CONFIG["DEQUEUE_EXIT_ON_EMPTY"],
+    show_default=True,
+)
+@click.option(
     "--blocking-dequeue-timeout",
     type=int,
     help="Dequeue block timeout",
@@ -133,6 +140,7 @@ def enqueue_raw(
 def dequeue(
     ctx: click.core.Context,
     batch: int,
+    exit_on_empty: bool,
     blocking_dequeue_timeout: int,
     dequeue_raise_on_empty: bool,
     consumer_group_id: str,
@@ -145,11 +153,27 @@ def dequeue(
     ctx.obj["RAISE_ON_EMPTY_DEQUEUE"] = dequeue_raise_on_empty
     ctx.obj["CONSUMER_AUTOCOMMIT"] = consumer_autocommit
     ctx.obj["CONSUMER_AUTO_OFFSET_RESET"] = consumer_auto_offset_reset
+    ctx.obj["DEQUEUE_EXIT_ON_EMPTY"] = exit_on_empty
 
     if consumer_group_id:
         ctx.obj["CONSUMER_GROUP_ID"] = consumer_group_id
 
+    if exit_on_empty and not blocking_dequeue_timeout:
+        msg = "--exit-on-empty needs to be combined with --blocking-dequeue-timeout argument"
+        raise click.exceptions.ClickException(msg)
+
+    if exit_on_empty and not dequeue_raise_on_empty:
+        msg = "--exit-on-empty needs to be combined with --dequeue-raise-on-empty=True"
+        raise click.exceptions.ClickException(msg)
+
     with closing(Queue(ctx.obj)) as queue:
         for _ in range(batch):
-            message = queue.dequeue()
-            click.echo(message)
+            try:
+                message = queue.dequeue()
+                click.echo(message)
+            except EmptyQueueException as exc:
+                if exit_on_empty:
+                    msg = "Queue is empty"
+                    click.echo(msg, err=True)
+                    sys.exit(100)
+                raise exc

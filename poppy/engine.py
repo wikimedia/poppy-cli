@@ -22,6 +22,7 @@ class ConfigDict(TypedDict, total=False):
     CONSUMER_GROUP_ID: str
     CONSUMER_AUTOCOMMIT: bool
     CONSUMER_AUTO_OFFSET_RESET: str
+    DEQUEUE_EXIT_ON_EMPTY: bool
 
 
 DEFAULT_CONFIG = ConfigDict(
@@ -30,7 +31,13 @@ DEFAULT_CONFIG = ConfigDict(
     RAISE_ON_EMPTY_DEQUEUE=False,
     CONSUMER_AUTOCOMMIT=True,
     CONSUMER_AUTO_OFFSET_RESET="earliest",
+    DEQUEUE_EXIT_ON_EMPTY=False,
 )
+
+
+class EmptyQueueException(Exception):
+    def __str__(self) -> str:
+        return "Queue is empty"
 
 
 class KombuEngine:
@@ -89,9 +96,9 @@ class KombuEngine:
             msg = self.queue.get(block=True, timeout=self.blocking_dequeue_timeout)
             msg.ack()
             return msg.body
-        except Empty as e:
+        except Empty:
             if self.raise_on_empty_dequeue:
-                raise e
+                raise EmptyQueueException()
             return "{}"
 
     def close(self) -> None:
@@ -191,9 +198,9 @@ class KafkaEngine:
         """
         try:
             return next(self.consumer).value
-        except StopIteration as e:
+        except StopIteration:
             if self.raise_on_empty_dequeue:
-                raise e
+                raise EmptyQueueException()
             return "{}"
 
     def close(self) -> None:

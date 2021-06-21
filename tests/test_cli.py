@@ -1,4 +1,5 @@
 import json
+from poppy.engine import EmptyQueueException
 import unittest
 from copy import deepcopy
 from unittest import mock
@@ -250,6 +251,83 @@ class TestCLIUnit(unittest.TestCase):
             )
             mock_message_queue.assert_called_once_with(self.config)
             self.assertEqual(mock_message_obj.dequeue.call_count, 10)
+
+    def test_cli_unit_dequeue_until_empty(self):
+        """Test that CLI dequeue method pops batch messages properly"""
+
+        with mock.patch("poppy.cli.Queue") as mock_message_queue:
+            mock_message_obj = mock.Mock()
+            mock_message_obj.dequeue.side_effect = [
+                EmptyQueueException(),
+            ]
+            mock_message_queue.return_value = mock_message_obj
+            runner = CliRunner()
+            result = runner.invoke(
+                cli.main,
+                [
+                    "--broker-url",
+                    self.broker_url,
+                    "--queue-name",
+                    self.queue_name,
+                    "dequeue",
+                    "--exit-on-empty",
+                    "True",
+                    "--dequeue-raise-on-empty",
+                    "True",
+                    "--blocking-dequeue-timeout",
+                    "5",
+                ],
+                obj={},
+            )
+
+            config = self.config
+            config["DEQUEUE_EXIT_ON_EMPTY"] = True
+            config["DEQUEUE_TIMEOUT"] = 5
+            config["RAISE_ON_EMPTY_DEQUEUE"] = True
+
+            mock_message_queue.assert_called_once_with(self.config)
+            self.assertEqual(mock_message_obj.dequeue.call_count, 1)
+            self.assertEqual(result.exit_code, 100)
+
+    def test_cli_unit_dequeue_batch_until_empty(self):
+        """Test that CLI dequeue method pops batch messages properly"""
+
+        with mock.patch("poppy.cli.Queue") as mock_message_queue:
+            mock_message_obj = mock.Mock()
+            mock_message_obj.dequeue.side_effect = [
+                mock_message_obj,
+                mock_message_obj,
+                mock_message_obj,
+                EmptyQueueException(),
+            ]
+            mock_message_queue.return_value = mock_message_obj
+            runner = CliRunner()
+            result = runner.invoke(
+                cli.main,
+                [
+                    "--broker-url",
+                    self.broker_url,
+                    "--queue-name",
+                    self.queue_name,
+                    "dequeue",
+                    "--batch",
+                    "10",
+                    "--exit-on-empty",
+                    "True",
+                    "--dequeue-raise-on-empty",
+                    "True",
+                    "--blocking-dequeue-timeout",
+                    "5",
+                ],
+                obj={},
+            )
+            config = self.config
+            config["DEQUEUE_EXIT_ON_EMPTY"] = True
+            config["DEQUEUE_TIMEOUT"] = 5
+            config["RAISE_ON_EMPTY_DEQUEUE"] = True
+            mock_message_queue.assert_called_once_with(self.config)
+            self.assertEqual(mock_message_obj.dequeue.call_count, 4)
+            self.assertEqual(result.exit_code, 100)
 
 
 class TestCLIIntegrationKombu(unittest.TestCase):
