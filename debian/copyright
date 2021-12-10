@@ -1,0 +1,10 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: poppy-cli
+Source: https://github.com/wikimedia/poppy-cli
+
+Files: *
+Copyright: 2021 Yiannis Giannelos <jgiannelos@wikimedia.org>
+License: GPL-3
+
+License: GPL-3
+ See /usr/share/common-licenses/GPL-3
