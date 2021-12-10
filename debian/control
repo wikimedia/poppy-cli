@@ -1,0 +1,11 @@
+Source: poppy-cli
+Section: net
+Priority: optional
+Maintainer: Yiannis Giannelos <jgiannelos@wikimedia.org>
+Build-Depends: debhelper-compat (= 12), dh-python, python3-setuptools, python3-all
+Standards-Version: 4.4.1
+
+Package: poppy-cli
+Architecture: all
+Depends: ${python3:Depends}, ${misc:Depends}, python3-pkg-resources
+Description: Poppy is a simple message queue CLI tool

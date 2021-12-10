@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 """The setup script."""
+import sys
 from setuptools import find_packages, setup
 
 with open("README.rst") as readme_file:
@@ -9,7 +10,10 @@ with open("README.rst") as readme_file:
 with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
-requirements = ["Click>=7.0", "kombu", "kafka-python"]
+requirements = ["Click>=7.0", "kombu>=4.2.1", "kafka-python>=1.4.3"]
+
+if sys.version_info < (3, 8):
+    requirements += ["typing-extensions>=3.7.4"]
 
 setup_requirements = []
 

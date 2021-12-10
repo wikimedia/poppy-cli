@@ -96,7 +96,6 @@ class TestCLIUnit(unittest.TestCase):
                 {
                     "BROKER_URL": self.broker_url,
                     "QUEUE_NAME": "test-message-queue",
-                    "CONNECTION_TIMEOUT": 5,
                 }
             )
             mock_message_obj.enqueue.assert_called_once_with(
@@ -134,8 +133,7 @@ class TestCLIUnit(unittest.TestCase):
                 mock_message_queue.assert_called_once_with(
                     {
                         "BROKER_URL": self.broker_url,
-                        "QUEUE_NAME": "test-message-queue",
-                        "CONNECTION_TIMEOUT": 5,
+                        "QUEUE_NAME": "test-message-queue"
                     }
                 )
                 mock_message_obj.enqueue.assert_has_calls(

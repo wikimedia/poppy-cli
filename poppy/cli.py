@@ -17,23 +17,13 @@ DEFAULT_CONFIG: ConfigDict = Queue.get_default_config()
 @click.group()
 @click.option("--broker-url", help="Message queue broker URL", required=True)
 @click.option("--queue-name", help="Message queue name", required=True)
-@click.option(
-    "--connection-timeout",
-    type=int,
-    help="Connection timeout (s)",
-    default=DEFAULT_CONFIG["CONNECTION_TIMEOUT"],
-    show_default=True,
-)
 @click.pass_context
-def main(
-    ctx: click.core.Context, broker_url: str, queue_name: str, connection_timeout: int
-):
+def main(ctx: click.core.Context, broker_url: str, queue_name: str):
     """Simple CLI for messaging"""
 
     ctx.ensure_object(dict)
     ctx.obj["BROKER_URL"] = broker_url
     ctx.obj["QUEUE_NAME"] = queue_name
-    ctx.obj["CONNECTION_TIMEOUT"] = connection_timeout
 
 
 @main.command()
