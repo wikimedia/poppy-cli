@@ -43,9 +43,7 @@ class TestQueueKombuUnit(unittest.TestCase):
         tq = Queue(self.config)
         self.assertEqual(tq.engine.name, self.queue_name)
         self.assertEqual(tq.engine.broker_url, self.broker_url)
-        mock_connection.assert_called_once_with(
-            self.broker_url, connect_timeout=self.config["CONNECTION_TIMEOUT"]
-        )
+        mock_connection.assert_called_once_with(self.broker_url)
         mock_conn_obj.SimpleQueue.assert_called_once_with(
             self.queue_name, serializer="json"
         )

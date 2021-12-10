@@ -16,7 +16,6 @@ else:
 class ConfigDict(TypedDict, total=False):
     BROKER_URL: str
     QUEUE_NAME: str
-    CONNECTION_TIMEOUT: int
     DEQUEUE_TIMEOUT: Optional[int]
     RAISE_ON_EMPTY_DEQUEUE: bool
     CONSUMER_GROUP_ID: str
@@ -26,7 +25,6 @@ class ConfigDict(TypedDict, total=False):
 
 
 DEFAULT_CONFIG = ConfigDict(
-    CONNECTION_TIMEOUT=5,
     DEQUEUE_TIMEOUT=None,
     RAISE_ON_EMPTY_DEQUEUE=False,
     CONSUMER_AUTOCOMMIT=True,
@@ -51,10 +49,8 @@ class KombuEngine:
         self.config: ConfigDict = config
         self.name: str = config["QUEUE_NAME"]
         self.broker_url: str = config["BROKER_URL"]
-        self.conn: Connection = Connection(
-            self.broker_url, connect_timeout=self.connection_timeout
-        )
-        self.conn.ensure_connection(timeout=self.connection_timeout)
+        self.conn: Connection = Connection(self.broker_url)
+        self.conn.ensure_connection()
         self.queue: SimpleQueue = self.conn.SimpleQueue(
             self.name, serializer=self.serializer
         )
@@ -62,12 +58,6 @@ class KombuEngine:
     @property
     def serializer(self) -> str:
         return "json"
-
-    @property
-    def connection_timeout(self) -> int:
-        return self.config.get(
-            "CONNECTION_TIMEOUT", DEFAULT_CONFIG["CONNECTION_TIMEOUT"]
-        )
 
     @property
     def blocking_dequeue_timeout(self) -> Optional[int]:
