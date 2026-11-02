@@ -1,29 +1,45 @@
 import os
+import socket
 
 from kafka import TopicPartition
 from kafka.admin import KafkaAdminClient, NewTopic
 from kafka.errors import (
-    NoBrokersAvailable,
+    KafkaTimeoutError,
     TopicAlreadyExistsError,
     UnknownTopicOrPartitionError,
 )
 
 
+def get_kafka_address():
+    """Get the kafka (host, port) for the testing environment"""
+    broker_hostname = os.environ.get("POPPY_TEST_KAFKA_HOSTNAME", "127.0.0.1")
+    broker_port = int(os.environ.get("POPPY_TEST_KAFKA_PORT", "9092"))
+    return broker_hostname, broker_port
+
+
 def get_kafka_servers():
     """Get the kafka confic for the testing environment"""
-    broker_hostname = os.environ.get("POPPY_TEST_KAFKA_HOSTNAME", "127.0.0.1")
-    broker_port = os.environ.get("POPPY_TEST_KAFKA_PORT", "9092")
+    broker_hostname, broker_port = get_kafka_address()
     return f"{broker_hostname}:{broker_port}"
 
 
 def check_kafka_connection():
     """Connectivity check for kafka admin client"""
     try:
-        KafkaAdminClient(
-            bootstrap_servers=get_kafka_servers(), client_id="poppy-test-client"
-        )
-    except NoBrokersAvailable:
+        with socket.create_connection(get_kafka_address(), timeout=5):
+            pass
+    except OSError:
         return False
+
+    try:
+        client = KafkaAdminClient(
+            bootstrap_servers=get_kafka_servers(),
+            client_id="poppy-test-client",
+            bootstrap_timeout_ms=5000,
+        )
+    except KafkaTimeoutError:
+        return False
+    client.close()
     return True
 
 

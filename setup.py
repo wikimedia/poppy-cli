@@ -9,7 +9,7 @@ with open("README.rst") as readme_file:
 with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
-requirements = ["Click>=7.0", "kombu", "kafka-python"]
+requirements = ["Click>=7.0", "kombu", "kafka-python>=3.0"]
 
 setup_requirements = []
 
